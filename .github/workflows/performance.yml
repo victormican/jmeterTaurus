@@ -34,10 +34,11 @@ jobs:
           bzt load-test.yml \
             -o modules.jmeter.path=/opt/jmeter
 
-      - name: Upload results
+      - name: Upload JMeter results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: taurus-results
-          path: ~/.bzt
+          name: jmeter-results
+          path: jmeter/results
+
   
