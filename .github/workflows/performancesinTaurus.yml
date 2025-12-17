@@ -8,41 +8,58 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # 1️⃣ Checkout del repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      # 2️⃣ Setup Java 17
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
+      # 3️⃣ Instalar Apache JMeter
       - name: Install JMeter
         run: |
           JMETER_VERSION=5.6.3
-          curl -L https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-$JMETER_VERSION.tgz \
+          curl -L https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz \
             | tar -xz
-          mv apache-jmeter-$JMETER_VERSION /opt/jmeter
+          sudo mv apache-jmeter-${JMETER_VERSION} /opt/jmeter
 
-      - name: Install JMeter Plugins (Concurrency Thread Group)
+      # 4️⃣ Instalar JMeter Plugins (Concurrency Thread Group)
+      - name: Install JMeter Plugins
         run: |
+          # Plugin Manager
           curl -L https://jmeter-plugins.org/get/ \
             -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
-      
+
+          # CmdRunner (DEPENDENCIA OBLIGATORIA)
           curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar \
             -o /opt/jmeter/lib/cmdrunner-2.3.jar
-      
-          /opt/jmeter/bin/PluginsManagerCMD.sh install jpgc-casutg
 
+          # Instalación del plugin Concurrency Thread Group
+          java -cp "/opt/jmeter/lib/ext/jmeter-plugins-manager.jar:/opt/jmeter/lib/cmdrunner-2.3.jar" \
+            org.jmeterplugins.repository.PluginManagerCMD install jpgc-casutg
 
+      # 5️⃣ Verificación del plugin (fail fast)
+      - name: Verify Concurrency Thread Group plugin
+        run: |
+          ls /opt/jmeter/lib/ext | grep jmeter-plugins-casutg
+
+      # 6️⃣ Ejecutar JMeter (modo non-GUI + HTML report)
       - name: Run JMeter
         run: |
           mkdir -p jmeter/results/report
+
           /opt/jmeter/bin/jmeter \
             -n \
             -t jmeter/test.jmx \
             -l jmeter/results/results.jtl \
-            -e -o jmeter/results/report
+            -e \
+            -o jmeter/results/report
 
+      # 7️⃣ Publicar resultados como artifact
       - name: Upload JMeter results
         if: always()
         uses: actions/upload-artifact@v4
