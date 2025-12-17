@@ -25,22 +25,25 @@ jobs:
           curl -L https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz \
             | tar -xz
           sudo mv apache-jmeter-${JMETER_VERSION} /opt/jmeter
-
+      
       # 4️⃣ Install JMeter Plugins (FORMA CORRECTA)
       - name: Install JMeter Plugins (Concurrency Thread Group)
         run: |
           # Plugin Manager (queda en lib/ext)
           curl -L https://jmeter-plugins.org/get/ \
             -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
-
+      
           # CmdRunner (launcher real)
           curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar \
             -o /opt/jmeter/lib/cmdrunner-2.3.jar
-
-          # Instalación CORRECTA del plugin
+      
+          # IMPORTANT: Initialize cmdrunner
+          java -cp "/opt/jmeter/lib/ext/jmeter-plugins-manager.jar" org.jmeterplugins.repository.PluginManagerCMDInstaller
+          
+          # Correct command syntax: --jmeter-home FIRST, then command
           java -jar /opt/jmeter/lib/cmdrunner-2.3.jar \
-            --tool org.jmeterplugins.repository.PluginManagerCMD \
             --jmeter-home /opt/jmeter \
+            --tool org.jmeterplugins.repository.PluginManagerCMD \
             install jpgc-casutg
 
       # 5️⃣ Verify plugin
