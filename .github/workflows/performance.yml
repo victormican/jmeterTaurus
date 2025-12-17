@@ -1,0 +1,43 @@
+name: Performance Tests (Taurus)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install JMeter
+        run: |
+          JMETER_VERSION=5.6.3
+          curl -L https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-$JMETER_VERSION.tgz \
+            | tar -xz
+          mv apache-jmeter-$JMETER_VERSION /opt/jmeter
+
+      - name: Install Taurus
+        run: |
+          pip3 install --upgrade pip
+          pip3 install bzt
+
+      - name: Run Taurus
+        run: |
+          bzt taurus/load-test.yml \
+            -o modules.jmeter.path=/opt/jmeter
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: taurus-results
+          path: ~/.bzt
+  
