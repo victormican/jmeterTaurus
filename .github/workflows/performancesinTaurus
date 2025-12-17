@@ -1,0 +1,42 @@
+name: Performance Test - JMeter
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  jmeter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install JMeter
+        run: |
+          JMETER_VERSION=5.6.3
+          curl -L https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-$JMETER_VERSION.tgz \
+            | tar -xz
+          mv apache-jmeter-$JMETER_VERSION /opt/jmeter
+
+      - name: Run JMeter
+        run: |
+          /opt/jmeter/bin/jmeter \
+            -n \
+            -t jmeter/test.jmx \
+            -l jmeter/results/results.jtl \
+            -e -o jmeter/results/report
+
+      - name: Upload JMeter results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-results
+          path: jmeter/results
