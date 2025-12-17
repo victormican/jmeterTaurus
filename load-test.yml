@@ -1,34 +1,27 @@
 execution:
-  - executor: jmeter
-    scenario: basic-load
-    concurrency: 20
+  - concurrency: 10
     ramp-up: 1m
-    hold-for: 3m
+    hold-for: 5m
+    scenario: main_scenario
 
 scenarios:
-  basic-load:
-    script: jmeter/modified_test.jmx
-    
-modules:
-  jmeter:
-    detect-plugins: false
-    properties:
-      jmeter.save.saveservice.autoflush: true
-      jmeter.save.saveservice.subresults: false
+  main_scenario:
+    requests:
+      - http://example.com
+      - http://example.com/about
+      - http://example.com/contact
 
 reporting:
   - module: final-stats
-  - module: passfail
-    criteria:
-      - avg-rt > 2000ms for 1m, stop as failed
-      - fail > 2% for 30s, stop as failed
   - module: console
-    disable: false
-    
   - module: junit-xml
-    filename: results/junit.xml
-    data-source: sample-labels
+    filename: report.xml
+
+modules:
+  jmeter:
+    path: /opt/jmeter
+    version: 5.6.3
+    detect-plugins: false
     
-  - module: jmeter
-    filename: results/results.jtl
-    write-xml-jtl: full
+  blazemeter:
+    report-name: "Performance Test Run"
