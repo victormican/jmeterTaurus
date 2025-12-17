@@ -88,7 +88,7 @@ jobs:
           sudo apt-get install -y python3-pip python3-venv python3-dev
           pip3 install --upgrade pip
           pip3 install bzt
-
+      
       - name: Run Performance Tests with Taurus
         env:
           TEST_SCENARIO: ${{ github.event.inputs.test_scenario || 'load-test.yml' }}
@@ -97,31 +97,26 @@ jobs:
           echo "Running performance tests with scenario: ${TEST_SCENARIO}"
           echo "Test duration: ${TEST_DURATION} minutes"
           
-          # 1. Crear directorio para resultados (si no existe)
-          mkdir -p ./performance-results
+          # Crear directorio de plugins temporal
+          mkdir -p ./temp_plugins
+          cp /opt/jmeter/lib/ext/*.jar ./temp_plugins/
           
-          # 2. Configurar entorno para Taurus
-          export JMETER_HOME=/opt/jmeter
-          
-          # 3. Ejecutar Taurus con configuración CLI completa
-          # La opción clave es: -o modules.jmeter.plugins-path=/opt/jmeter/lib/ext
+          # Ejecutar Taurus con configuración específica para plugins
           bzt ${TEST_SCENARIO} \
             -o modules.jmeter.path=/opt/jmeter \
-            -o modules.jmeter.plugins-path=/opt/jmeter/lib/ext \
+            -o modules.jmeter.plugins-path=./temp_plugins \
+            -o modules.jmeter.system-properties.jmeter.plugin.dir=./temp_plugins \
             -o modules.jmeter.detect-plugins=false \
+            -o modules.jmeter.download-link= \
             -o modules.jmeter.version=5.6.3 \
             -o modules.jmeter.properties.DURACION=${TEST_DURATION} \
             -o modules.jmeter.properties.USUARIOS=10 \
             -o settings.artifacts-dir=./performance-results \
-            -o execution.0.concurrency=10 \
-            -o execution.0.hold-for=${TEST_DURATION}m \
-            -o execution.0.ramp-up=1m \
-            -o execution.0.scenario=main_scenario \
             -o modules.blazemeter.token="" \
             -o modules.blazemeter.upload-artifacts=false \
             -o modules.blazemeter.send-report=false \
+            -o modules.blazemeter.browser-open=false \
             -report
-          
           echo "Taurus execution completed!"
 
       # 7️⃣ Generar reporte HTML de JMeter (si hay archivos JTL)
