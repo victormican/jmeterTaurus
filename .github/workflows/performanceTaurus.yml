@@ -89,7 +89,6 @@ jobs:
           pip3 install --upgrade pip
           pip3 install bzt
 
-      # 6️⃣ Ejecutar pruebas de performance con Taurus
       - name: Run Performance Tests with Taurus
         env:
           TEST_SCENARIO: ${{ github.event.inputs.test_scenario || 'load-test.yml' }}
@@ -98,22 +97,29 @@ jobs:
           echo "Running performance tests with scenario: ${TEST_SCENARIO}"
           echo "Test duration: ${TEST_DURATION} minutes"
           
-          # Crear directorio para resultados
+          # 1. Crear directorio para resultados (si no existe)
           mkdir -p ./performance-results
           
-          # Configurar entorno para Taurus
+          # 2. Configurar entorno para Taurus
           export JMETER_HOME=/opt/jmeter
           
-          # Ejecutar Taurus con opciones específicas
+          # 3. Ejecutar Taurus con configuración CLI completa
+          # La opción clave es: -o modules.jmeter.plugins-path=/opt/jmeter/lib/ext
           bzt ${TEST_SCENARIO} \
             -o modules.jmeter.path=/opt/jmeter \
+            -o modules.jmeter.plugins-path=/opt/jmeter/lib/ext \
             -o modules.jmeter.detect-plugins=false \
             -o modules.jmeter.version=5.6.3 \
+            -o modules.jmeter.properties.DURACION=${TEST_DURATION} \
+            -o modules.jmeter.properties.USUARIOS=10 \
             -o settings.artifacts-dir=./performance-results \
             -o execution.0.concurrency=10 \
             -o execution.0.hold-for=${TEST_DURATION}m \
             -o execution.0.ramp-up=1m \
             -o execution.0.scenario=main_scenario \
+            -o modules.blazemeter.token="" \
+            -o modules.blazemeter.upload-artifacts=false \
+            -o modules.blazemeter.send-report=false \
             -report
           
           echo "Taurus execution completed!"
