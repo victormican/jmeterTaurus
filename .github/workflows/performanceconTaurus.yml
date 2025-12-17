@@ -8,8 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -23,6 +22,18 @@ jobs:
           curl -L https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-$JMETER_VERSION.tgz \
             | tar -xz
           mv apache-jmeter-$JMETER_VERSION /opt/jmeter
+
+      - name: Install JMeter Plugins (Concurrency Thread Group)
+        run: |
+          curl -L https://jmeter-plugins.org/get/ \
+            -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
+
+          curl -L https://jmeter-plugins.org/get/ \
+            -o /opt/jmeter/lib/cmdrunner-2.3.jar
+
+          java -cp /opt/jmeter/lib/ext/jmeter-plugins-manager.jar \
+            org.jmeterplugins.repository.PluginManagerCMD \
+            install jpgc-casutg
 
       - name: Install Taurus
         run: |
@@ -40,5 +51,3 @@ jobs:
         with:
           name: jmeter-results
           path: jmeter/results
-
-  
