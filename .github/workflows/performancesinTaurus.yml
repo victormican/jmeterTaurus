@@ -28,11 +28,13 @@ jobs:
 
       - name: Run JMeter
         run: |
+          mkdir -p jmeter/results/report
           /opt/jmeter/bin/jmeter \
             -n \
             -t jmeter/test.jmx \
             -l jmeter/results/results.jtl \
             -e -o jmeter/results/report
+
 
       - name: Upload JMeter results
         if: always()
