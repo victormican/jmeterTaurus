@@ -27,20 +27,9 @@ jobs:
           sudo mv apache-jmeter-${JMETER_VERSION} /opt/jmeter
       
       # 4️⃣ Install JMeter Plugins (CORRECT APPROACH)
-      - name: Install JMeter Plugins (Concurrency Thread Group)
+      - name: Instalar Plugins de JMeter (Conjunto Correcto)
         run: |
-          # Download Plugin Manager
-          curl -L https://jmeter-plugins.org/get/ \
-            -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
-          
-          # Download CmdRunner
-          curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar \
-            -o /opt/jmeter/lib/cmdrunner-2.3.jar
-          
-          # IMPORTANT: First, we need to run JMeter once to initialize
-          /opt/jmeter/bin/jmeter --version
-          
-          # Then install the plugin using the correct syntax
+          # ... (Descargar Plugin Manager y CmdRunner como ya lo haces) ...
           cd /opt/jmeter
           java -jar lib/cmdrunner-2.3.jar \
             --tool org.jmeterplugins.repository.PluginManagerCMD \
