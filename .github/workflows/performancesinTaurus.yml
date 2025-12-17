@@ -10,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -26,6 +25,18 @@ jobs:
             | tar -xz
           mv apache-jmeter-$JMETER_VERSION /opt/jmeter
 
+      - name: Install JMeter Plugins (Concurrency Thread Group)
+        run: |
+          curl -L https://jmeter-plugins.org/get/ \
+            -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
+
+          curl -L https://jmeter-plugins.org/get/ \
+            -o /opt/jmeter/lib/cmdrunner-2.3.jar
+
+          java -cp /opt/jmeter/lib/ext/jmeter-plugins-manager.jar \
+            org.jmeterplugins.repository.PluginManagerCMD \
+            install jpgc-casutg
+
       - name: Run JMeter
         run: |
           mkdir -p jmeter/results/report
@@ -34,7 +45,6 @@ jobs:
             -t jmeter/test.jmx \
             -l jmeter/results/results.jtl \
             -e -o jmeter/results/report
-
 
       - name: Upload JMeter results
         if: always()
