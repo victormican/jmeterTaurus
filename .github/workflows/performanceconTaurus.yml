@@ -1,11 +1,7 @@
 name: Performance Tests (Taurus)
 
 on:
-  workflow_dispatch:  # Permite ejecución manual
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  workflow_dispatch: 
 
 jobs:
   performance:
