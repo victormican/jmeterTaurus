@@ -1,17 +1,34 @@
 execution:
   - executor: jmeter
-    scenario: carga-basica
+    scenario: basic-load
     concurrency: 20
     ramp-up: 1m
     hold-for: 3m
 
 scenarios:
-  carga-basica:
-    script: jmeter/test.jmx
+  basic-load:
+    script: jmeter/modified_test.jmx
+    
+modules:
+  jmeter:
+    detect-plugins: false
+    properties:
+      jmeter.save.saveservice.autoflush: true
+      jmeter.save.saveservice.subresults: false
 
 reporting:
   - module: final-stats
   - module: passfail
     criteria:
       - avg-rt > 2000ms for 1m, stop as failed
-      - fail > 2%, stop as failed
+      - fail > 2% for 30s, stop as failed
+  - module: console
+    disable: false
+    
+  - module: junit-xml
+    filename: results/junit.xml
+    data-source: sample-labels
+    
+  - module: jmeter
+    filename: results/results.jtl
+    write-xml-jtl: full
