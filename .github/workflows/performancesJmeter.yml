@@ -9,8 +9,7 @@ jobs:
 
     steps:
       # 1️⃣ Checkout
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       # 2️⃣ Java 17
       - name: Setup Java
@@ -27,24 +26,25 @@ jobs:
             | tar -xz
           sudo mv apache-jmeter-${JMETER_VERSION} /opt/jmeter
 
-      # 4️⃣ Install JMeter Plugins (CORRECT WAY)
+      # 4️⃣ Install JMeter Plugins (CORRECT & FINAL)
       - name: Install JMeter Plugins (Concurrency Thread Group)
         run: |
           # Plugin Manager
           curl -L https://jmeter-plugins.org/get/ \
             -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
 
-          # CmdRunner (ENTRYPOINT REAL)
+          # CmdRunner
           curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar \
             -o /opt/jmeter/lib/cmdrunner-2.3.jar
 
           # Instalación correcta del plugin
           java -jar /opt/jmeter/lib/cmdrunner-2.3.jar \
             --tool PluginManagerCMD \
+            --classpath /opt/jmeter/lib/ext/jmeter-plugins-manager.jar \
             --jmeter-home /opt/jmeter \
             install jpgc-casutg
 
-      # 5️⃣ Verify plugin (fail fast)
+      # 5️⃣ Verify plugin
       - name: Verify Concurrency Thread Group plugin
         run: |
           ls /opt/jmeter/lib/ext | grep jmeter-plugins-casutg
