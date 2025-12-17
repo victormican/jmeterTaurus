@@ -1,14 +1,20 @@
 name: Performance Tests (Taurus)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Permite ejecución manual
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   performance:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -21,33 +27,61 @@ jobs:
           JMETER_VERSION=5.6.3
           curl -L https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-$JMETER_VERSION.tgz \
             | tar -xz
-          mv apache-jmeter-$JMETER_VERSION /opt/jmeter
+          sudo mv apache-jmeter-$JMETER_VERSION /opt/jmeter
+          echo "/opt/jmeter/bin" >> $GITHUB_PATH
 
-      - name: Install JMeter Plugins (Concurrency Thread Group)
+      - name: Install JMeter Plugins (Optional)
         run: |
-          curl -L https://jmeter-plugins.org/get/ \
+          # Instalar Plugin Manager
+          curl -L https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.7/jmeter-plugins-manager-1.7.jar \
             -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
-
-          curl -L https://jmeter-plugins.org/get/ \
+          
+          # Instalar cmdrunner para plugins
+          curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar \
             -o /opt/jmeter/lib/cmdrunner-2.3.jar
-
-          java -cp /opt/jmeter/lib/ext/jmeter-plugins-manager.jar \
-            org.jmeterplugins.repository.PluginManagerCMD \
-            install jpgc-casutg
+          
+          # Instalar Concurrency Thread Group (opcional)
+          curl -L https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-casutg/2.10/jmeter-plugins-casutg-2.10.jar \
+            -o /opt/jmeter/lib/ext/jmeter-plugins-casutg-2.10.jar
 
       - name: Install Taurus
         run: |
-          pip3 install --upgrade pip
+          sudo apt-get update
+          sudo apt-get install -y python3-pip python3-venv
           pip3 install bzt
 
-      - name: Run Taurus
+      - name: Run Taurus Load Test
         run: |
           bzt load-test.yml \
-            -o modules.jmeter.path=/opt/jmeter
+            -o modules.jmeter.path=/opt/jmeter \
+            -o modules.jmeter.detect-plugins=false
 
-      - name: Upload JMeter results
+      - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: jmeter-results
-          path: jmeter/results
+          name: taurus-results
+          path: |
+            **/*.csv
+            **/*.jtl
+            **/*.log
+            **/*.yml
+          retention-days: 7
+
+      - name: Generate HTML Report (Optional)
+        run: |
+          # Instalar JMeter HTML Report generator
+          JMETER_HOME=/opt/jmeter
+          if [ -f "$JMETER_HOME/bin/JMeterPluginsCMD.sh" ]; then
+            $JMETER_HOME/bin/JMeterPluginsCMD.sh \
+              --generate-report \
+              --input-jtl jmeter/results/*.jtl \
+              --output-dir ./jmeter-report
+          fi
+
+      - name: Upload HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report
+          path: ./jmeter-report/
