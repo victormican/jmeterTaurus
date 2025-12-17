@@ -1,0 +1,21 @@
+modules:
+  jmeter:
+    path: "C:/Users/viarm/Documents/Testing/apache-jmeter-5.6.3"
+
+execution:
+  - executor: jmeter
+    scenario: carga-basica
+    concurrency: 20
+    ramp-up: 1m
+    hold-for: 3m
+
+scenarios:
+  carga-basica:
+    script: jmeter/test.jmx
+
+reporting:
+  - module: final-stats
+  - module: passfail
+    criteria:
+      - avg-rt > 2000ms for 1m, stop as failed
+      - fail > 2%, stop as failed
