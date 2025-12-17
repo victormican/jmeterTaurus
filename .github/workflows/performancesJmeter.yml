@@ -58,7 +58,7 @@ jobs:
 
           /opt/jmeter/bin/jmeter \
             -n \
-            -t jmeter/test.jmx \
+            -t jmeter/testplugin.jmx \
             -l jmeter/results/results.jtl \
             -e \
             -o jmeter/results/report
