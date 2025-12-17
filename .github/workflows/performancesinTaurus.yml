@@ -27,13 +27,12 @@ jobs:
         run: |
           curl -L https://jmeter-plugins.org/get/ \
             -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
-
-          curl -L https://jmeter-plugins.org/get/ \
+      
+          curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar \
             -o /opt/jmeter/lib/cmdrunner-2.3.jar
+      
+          /opt/jmeter/bin/PluginsManagerCMD.sh install jpgc-casutg
 
-          java -cp /opt/jmeter/lib/ext/jmeter-plugins-manager.jar \
-            org.jmeterplugins.repository.PluginManagerCMD \
-            install jpgc-casutg
 
       - name: Run JMeter
         run: |
