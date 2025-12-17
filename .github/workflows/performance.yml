@@ -31,7 +31,7 @@ jobs:
 
       - name: Run Taurus
         run: |
-          bzt taurus/load-test.yml \
+          bzt load-test.yml \
             -o modules.jmeter.path=/opt/jmeter
 
       - name: Upload results
