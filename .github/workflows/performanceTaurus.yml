@@ -46,34 +46,28 @@ jobs:
           # Verificar instalación
           /opt/jmeter/bin/jmeter --version
 
-      # 4️⃣ Instalar Plugins de JMeter (Método directo - más confiable)
-      - name: Install JMeter Plugins
+      # 4️⃣ Install JMeter Plugins (CORRECT APPROACH)
+      - name: Instalar Plugins de JMeter (Solución Completa)
         run: |
-          echo "Installing JMeter plugins..."
-          
-          # 1. Plugin Manager (para gestión futura si es necesario)
-          curl -L "https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-manager/1.7/jmeter-plugins-manager-1.7.jar" \
+          # 1. Descargar Plugin Manager en la ubicación CORRECTA
+          curl -L https://jmeter-plugins.org/get/ \
             -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
           
-          # 2. CmdRunner
-          curl -L "https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar" \
+          # 2. Descargar CmdRunner en la ubicación CORRECTA
+          curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar \
             -o /opt/jmeter/lib/cmdrunner-2.3.jar
           
-          # 3. Concurrency Thread Group Plugin (jpgc-casutg)
-          curl -L "https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-casutg/2.13/jmeter-plugins-casutg-2.13.jar" \
-            -o /opt/jmeter/lib/ext/jmeter-plugins-casutg-2.13.jar
+          # 3. EJECUTAR JMETER POR PRIMERA VEZ (ESTO ES CRÍTICO)
+          /opt/jmeter/bin/jmeter --version 2>&1 | head -5
           
-          # 4. Dependencias necesarias
-          curl -L "https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-cmn-jmeter/0.8/jmeter-plugins-cmn-jmeter-0.8.jar" \
-            -o /opt/jmeter/lib/ext/jmeter-plugins-cmn-jmeter-0.8.jar
+          # 4. Instalar los plugins que necesitas
+          cd /opt/jmeter
+          java -cp lib/ext/jmeter-plugins-manager.jar org.jmeterplugins.repository.PluginManagerCMDInstaller
           
-          # 5. JSON Plugins (útiles para APIs REST)
-          curl -L "https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-json/2.7/jmeter-plugins-json-2.7.jar" \
-            -o /opt/jmeter/lib/ext/jmeter-plugins-json-2.7.jar
-          
-          # 6. Custom Thread Groups (adicional)
-          curl -L "https://repo1.maven.org/maven2/kg/apc/jmeter-plugins-custom-threads/0.1/jmeter-plugins-custom-threads-0.1.jar" \
-            -o /opt/jmeter/lib/ext/jmeter-plugins-custom-threads-0.1.jar
+          # 5. Instalar el conjunto de Custom Thread Groups (incluye Ultimate Thread Group)
+          java -jar lib/cmdrunner-2.3.jar \
+            --tool org.jmeterplugins.repository.PluginManagerCMD \
+            install jpgc-casutg
           
           echo "Plugins installed successfully!"
           
