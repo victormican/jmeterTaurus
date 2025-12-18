@@ -7,10 +7,6 @@ on:
         description: 'Test scenario to run'
         required: false
         default: 'taurus-jmter.yml'
-      duration:
-        description: 'Test duration (minutes)'
-        required: false
-        default: '5'
 
 jobs:
   performance:
