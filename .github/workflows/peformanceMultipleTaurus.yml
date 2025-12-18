@@ -49,6 +49,20 @@ jobs:
         with:
           node-version: '18'
 
+      # 4️⃣1️⃣ Install k6 (ONLY k6)
+      - name: Install k6
+        if: steps.engine.outputs.engine == 'k6'
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y gnupg software-properties-common
+          curl -fsSL https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+          k6 version
+
       # 5️⃣ Install JMeter
       - name: Install JMeter
         if: steps.engine.outputs.engine == 'jmeter'
@@ -106,7 +120,7 @@ jobs:
           mkdir -p gatling-html-report
           cp -r gatling/target/gatling/* gatling-html-report/
 
-      # 1️⃣1️⃣ k6 HTML + Dashboard
+      # 1️⃣1️⃣ k6 HTML / Dashboard
       - name: Collect k6 HTML Report
         if: steps.engine.outputs.engine == 'k6'
         run: |
