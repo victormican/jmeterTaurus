@@ -1,0 +1,23 @@
+execution:
+  - scenario: uso-script-existente
+    # Al definir concurrency/hold-for aquí, Taurus SOBRESCRIBE 
+    # la configuración de Thread Group que tengas dentro del JMX.
+    concurrency: 10
+    ramp-up: 1m
+    hold-for: 5m
+
+scenarios:
+  uso-script-existente:
+    script: tests/mi_script_complejo.jmx  # <--- Ruta a tu archivo JMX
+    
+    # Si tu JMX usa variables como ${__P(url)}, las defines aquí:
+    properties: 
+      url: blazedemo.com
+      puerto: 443
+
+# Configuración de reportes (Igual que arriba)
+reporting:
+  - module: passfail
+    criteria:
+      - avg-rt > 2s, continue as failed
+      - fail > 5%, stop as failed
