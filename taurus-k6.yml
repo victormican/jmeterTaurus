@@ -1,7 +1,13 @@
 execution:
   - executor: k6
-    scenario: k6-test
+    script: tests/load/test_k6.js
+    vus: 10
+    duration: 1m
 
-scenarios:
-  k6-test:
-    script: k6/test.js
+reporting:
+  - module: final-stats
+
+passfail:
+  - criteria:
+      - avg-rt < 500ms
+      - fail > 0%
