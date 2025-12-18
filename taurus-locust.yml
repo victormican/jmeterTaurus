@@ -1,0 +1,16 @@
+execution:
+  - executor: locust
+    scenario: api_test
+    users: 20
+    spawn-rate: 5
+    hold-for: 1m
+
+scenarios:
+  api_test:
+    script: locustfile.py
+    default-address: https://api.mi-servicio.com
+
+passfail:
+  - criteria:
+      - avg-rt < 500ms
+      - fail > 0%
