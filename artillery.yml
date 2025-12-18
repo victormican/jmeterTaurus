@@ -1,0 +1,12 @@
+config:
+  target: https://api.mi-servicio.com
+  phases:
+    - duration: 60
+      arrivalRate: 5
+
+scenarios:
+  - flow:
+      - get:
+          url: /health
+          expect:
+            - statusCode: 200
