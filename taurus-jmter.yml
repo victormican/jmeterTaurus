@@ -1,0 +1,62 @@
+execution:
+  - executor: jmeter
+    scenario: example-test
+    concurrency: ${USUARIOS}
+    ramp-up: 30s
+    hold-for: ${DURACION}m
+
+scenarios:
+  example-test:
+    think-time: 500ms
+
+    requests:
+      - label: Home
+        method: GET
+        url: https://example.com
+        expect:
+          - status-code: 200
+
+      - label: About
+        method: GET
+        url: https://example.com/about
+        expect:
+          - status-code: 200
+
+      - label: Contact
+        method: GET
+        url: https://example.com/contact
+        expect:
+          - status-code: 200
+
+reporting:
+  - module: console
+
+settings:
+  artifacts-dir: performance-results
+  check-updates: false
+
+modules:
+  jmeter:
+    path: /opt/jmeter
+    version: 5.6.3
+
+    # 🔑 CLAVE para que el HTML report funcione
+    properties:
+      jmeter.save.saveservice.output_format: csv
+      jmeter.save.saveservice.print_field_names: true
+
+      # Campos necesarios para el HTML Dashboard
+      jmeter.save.saveservice.time: true
+      jmeter.save.saveservice.latency: true
+      jmeter.save.saveservice.connect_time: true
+      jmeter.save.saveservice.successful: true
+      jmeter.save.saveservice.response_code: true
+      jmeter.save.saveservice.response_message: true
+      jmeter.save.saveservice.thread_name: true
+      jmeter.save.saveservice.label: true
+      jmeter.save.saveservice.bytes: true
+      jmeter.save.saveservice.sent_bytes: true
+
+  blazemeter:
+    upload-artifacts: false
+    send-report: false
