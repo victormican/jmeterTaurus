@@ -1,4 +1,4 @@
-name: Performance Tests (Taurus with JMeter)
+name: Performance Tests (Taurus + JMeter Nativo)
 
 on:
   workflow_dispatch:
@@ -22,172 +22,92 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Configurar Java 17
+      # 2️⃣ Configurar Java 17 (Necesario para JMeter)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # 3️⃣ Instalar JMeter
-      - name: Install JMeter
+      # 3️⃣ Configurar Python (Necesario para Taurus)
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 4️⃣ Instalar JMeter y Plugins Manualmente
+      # Nota: Hacemos esto manual para garantizar que 'jpgc-casutg' esté presente
+      - name: Install JMeter & Plugins manually
         run: |
           JMETER_VERSION="5.6.3"
+          INSTALL_DIR="/opt/jmeter"
           
           echo "Installing JMeter ${JMETER_VERSION}..."
-          curl -L "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz" \
-            | tar -xz
+          curl -L "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz" | tar -xz
+          sudo mv "apache-jmeter-${JMETER_VERSION}" $INSTALL_DIR
           
-          sudo mv "apache-jmeter-${JMETER_VERSION}" /opt/jmeter
+          # Descargar Plugin Manager y CmdRunner
+          curl -L https://jmeter-plugins.org/get/ -o $INSTALL_DIR/lib/ext/jmeter-plugins-manager.jar
+          curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar -o $INSTALL_DIR/lib/cmdrunner-2.3.jar
           
-          # Agregar JMeter al PATH
-          echo "/opt/jmeter/bin" >> $GITHUB_PATH
+          # Instalar Plugins (Custom Thread Groups, etc)
+          java -jar $INSTALL_DIR/lib/cmdrunner-2.3.jar --tool org.jmeterplugins.repository.PluginManagerCMD install jpgc-casutg,jpgc-json,jpgc-cmn
           
-          # Verificar instalación
-          /opt/jmeter/bin/jmeter --version
-
-      # 4️⃣ Install JMeter Plugins (CORRECT APPROACH)
-      - name: Instalar Plugins de JMeter (Solución Completa)
-        run: |
-          # 1. Descargar Plugin Manager en la ubicación CORRECTA
-          curl -L https://jmeter-plugins.org/get/ \
-            -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
-          
-          # 2. Descargar CmdRunner en la ubicación CORRECTA
-          curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar \
-            -o /opt/jmeter/lib/cmdrunner-2.3.jar
-          
-          # 3. EJECUTAR JMETER POR PRIMERA VEZ (ESTO ES CRÍTICO)
-          /opt/jmeter/bin/jmeter --version 2>&1 | head -5
-          
-          # 4. Instalar los plugins que necesitas
-          cd /opt/jmeter
-          java -cp lib/ext/jmeter-plugins-manager.jar org.jmeterplugins.repository.PluginManagerCMDInstaller
-          
-          # 5. Instalar el conjunto de Custom Thread Groups (incluye Ultimate Thread Group)
-          java -jar lib/cmdrunner-2.3.jar \
-            --tool org.jmeterplugins.repository.PluginManagerCMD \
-            install jpgc-casutg
-          
-          echo "Plugins installed successfully!"
-          
-          # Verificar instalación de plugins
-          echo "Verifying plugins installation..."
-          ls -la /opt/jmeter/lib/ext/*.jar | grep -E "(casutg|cmn|json)"
+          echo "JMeter and Plugins installed at $INSTALL_DIR"
 
       # 5️⃣ Instalar Taurus (BZT)
       - name: Install Taurus
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip python3-venv python3-dev
-          pip3 install --upgrade pip
-          pip3 install bzt
-      
-      - name: Run Performance Tests with Taurus
+        run: pip install bzt
+
+      # 6️⃣ Ejecutar Taurus
+      # CAMBIO CLAVE: Definimos un directorio de artefactos FIJO y apuntamos al JMeter instalado
+      - name: Run Performance Tests
         env:
           TEST_SCENARIO: ${{ github.event.inputs.test_scenario || 'load-test.yml' }}
           TEST_DURATION: ${{ github.event.inputs.duration || '5' }}
         run: |
-          echo "Running performance tests with scenario: ${TEST_SCENARIO}"
-          echo "Test duration: ${TEST_DURATION} minutes"
+          echo "Running scenario: ${TEST_SCENARIO} for ${TEST_DURATION} minutes"
           
-          # Crear directorio de plugins temporal
-          mkdir -p ./temp_plugins
-          cp /opt/jmeter/lib/ext/*.jar ./temp_plugins/
-          
-          # Ejecutar Taurus con configuración específica para plugins
+          # Ejecutamos Taurus apuntando al JMeter que instalamos manualmente
           bzt ${TEST_SCENARIO} \
-            -o modules.jmeter.path=/opt/jmeter \
-            -o modules.jmeter.plugins-path=./temp_plugins \
-            -o modules.jmeter.system-properties.jmeter.plugin.dir=./temp_plugins \
-            -o modules.jmeter.detect-plugins=false \
-            -o modules.jmeter.download-link= \
+            -o modules.jmeter.path=/opt/jmeter/bin/jmeter \
             -o modules.jmeter.version=5.6.3 \
             -o modules.jmeter.properties.DURACION=${TEST_DURATION} \
             -o modules.jmeter.properties.USUARIOS=10 \
-            -o settings.artifacts-dir=./performance-results \
-            -o modules.blazemeter.token="" \
-            -o modules.blazemeter.upload-artifacts=false \
-            -o modules.blazemeter.send-report=false \
-            -o modules.blazemeter.browser-open=false \
-            -report
-          echo "Taurus execution completed!"
+            -o settings.artifacts-dir=performance-results \
+            -o modules.blazemeter.report-name="GitHub Action Test" \
+            -o modules.blazemeter.test="Taurus JMeter Test" 
+          
+          # Nota: Quité los flags de 'detect-plugins=false' y 'plugins-path' complejos.
+          # Al apuntar modules.jmeter.path correctamente, Taurus usará los plugins de /opt/jmeter/lib/ext
 
-      # 7️⃣ Generar reporte HTML de JMeter (si hay archivos JTL)
+      # 7️⃣ Generar reporte HTML de JMeter Nativo
+      # Buscamos el kpi.jtl generado por Taurus dentro de la carpeta fija
       - name: Generate JMeter HTML Report
         if: always()
         run: |
-          echo "Generating JMeter HTML reports..."
+          echo "Looking for JTL files..."
+          JTL_FILE="performance-results/kpi.jtl"
           
-          # Buscar archivos JTL generados
-          JTL_FILES=$(find ./performance-results -name "*.jtl" -type f | head -1)
-          
-          if [ -n "$JTL_FILES" ] && [ -f "$JTL_FILES" ]; then
-            echo "Found JTL file: ${JTL_FILES}"
+          if [ -f "$JTL_FILE" ]; then
+            echo "JTL found. Generating Dashboard..."
+            mkdir -p jmeter-dashboard
             
-            # Crear directorio para reporte HTML
-            mkdir -p ./jmeter-html-report
-            
-            # Generar reporte HTML usando JMeter
-            /opt/jmeter/bin/jmeter \
-              -g "${JTL_FILES}" \
-              -o ./jmeter-html-report
-              
-            echo "HTML report generated successfully!"
+            /opt/jmeter/bin/jmeter -g "$JTL_FILE" -o jmeter-dashboard
+            echo "Dashboard generated successfully."
           else
-            echo "No JTL files found for HTML report generation."
+            echo "ERROR: kpi.jtl not found in performance-results/"
+            ls -R performance-results/
           fi
 
-      # 8️⃣ Subir resultados de Taurus
-      - name: Upload Taurus Results
+      # 8️⃣ Subir TODO (Taurus XML + Logs + JMeter Dashboard)
+      # Unificamos en un solo zip para facilitar la descarga
+      - name: Upload All Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: taurus-performance-results
+          name: full-performance-report
           path: |
-            ./performance-results/
-            **/*.jtl
-            **/*.csv
-            **/*.log
-            **/*.yml
-            **/*.xml
+            performance-results/
+            jmeter-dashboard/
           retention-days: 30
-
-      # 9️⃣ Subir reporte HTML de JMeter
-      - name: Upload JMeter HTML Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: jmeter-html-report
-          path: ./jmeter-html-report/
-          retention-days: 30
-
-      # 🔟 Publicar métricas clave (opcional)
-      - name: Extract Key Metrics
-        if: always()
-        run: |
-          echo "Extracting key performance metrics..."
-          
-          # Buscar archivo de resultados principal
-          RESULT_FILE=$(find ./performance-results -name "*kpi.jtl" -o -name "*.csv" | head -1)
-          
-          if [ -n "$RESULT_FILE" ] && [ -f "$RESULT_FILE" ]; then
-            echo "=== PERFORMANCE METRICS SUMMARY ==="
-            echo "Results file: ${RESULT_FILE}"
-            
-            # Extraer métricas básicas (ejemplo)
-            if command -v awk &> /dev/null; then
-              echo "Sample data from results:"
-              head -5 "${RESULT_FILE}"
-            fi
-            
-            # Contar número de requests
-            if [ -f "${RESULT_FILE}" ]; then
-              TOTAL_REQUESTS=$(tail -n +2 "${RESULT_FILE}" | wc -l)
-              echo "Total requests: ${TOTAL_REQUESTS}"
-            fi
-          else
-            echo "No results file found for metrics extraction."
-          fi
-          
-          echo "=== WORKFLOW COMPLETED ==="
