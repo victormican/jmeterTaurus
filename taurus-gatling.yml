@@ -1,0 +1,14 @@
+execution:
+  - executor: shell
+    scenario: gatling-test
+
+scenarios:
+  gatling-test:
+    script:
+      - mvn -f gatling/pom.xml gatling:test
+
+reporting:
+  - module: console
+
+settings:
+  artifacts-dir: performance-results
