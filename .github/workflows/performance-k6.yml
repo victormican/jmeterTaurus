@@ -36,8 +36,11 @@ jobs:
         run: |
           npm install -g k6-reporter
 
-      # 4️⃣ Run k6 Test
+      # 4️⃣ Run k6 Test (with Web Dashboard export)
       - name: Run k6 Test
+        env:
+          K6_WEB_DASHBOARD: "true"
+          K6_WEB_DASHBOARD_EXPORT: "performance-results/k6-dashboard.html"
         run: |
           set -e
           mkdir -p performance-results
@@ -45,7 +48,7 @@ jobs:
             --out json=performance-results/k6-results.json \
             ${{ github.event.inputs.script }}
 
-      # 5️⃣ Generate HTML Report
+      # 5️⃣ Generate HTML Summary Report
       - name: Generate k6 HTML Report
         if: always()
         run: |
@@ -54,11 +57,13 @@ jobs:
           k6-reporter performance-results/k6-results.json \
             --output k6-html-report/index.html
 
-      # 6️⃣ Upload HTML Report
-      - name: Upload k6 HTML Report
+      # 6️⃣ Upload k6 Artifacts
+      - name: Upload k6 Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: k6-html-report
-          path: k6-html-report/
+          name: k6-performance-artifacts
+          path: |
+            performance-results/
+            k6-html-report/
           retention-days: 30
