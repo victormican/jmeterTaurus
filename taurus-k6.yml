@@ -1,8 +1,12 @@
 execution:
   - executor: k6
-    script: tests/load/test_k6.js
+    scenario: k6_test
     vus: 10
     duration: 1m
+
+scenarios:
+  k6_test:
+    script: tests/load/test_k6.js
 
 reporting:
   - module: final-stats
