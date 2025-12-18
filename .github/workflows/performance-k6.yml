@@ -31,7 +31,7 @@ jobs:
           sudo apt-get install -y k6
           k6 version
 
-      # 3️⃣ Run k6 Test (HTML + Web Dashboard export)
+      # 3️⃣ Run k6 Test (HTML report + Web Dashboard)
       - name: Run k6 Test
         env:
           K6_WEB_DASHBOARD: "true"
@@ -41,7 +41,7 @@ jobs:
           mkdir -p performance-results
           k6 run ${{ github.event.inputs.script }}
 
-      # 4️⃣ Upload k6 Artifacts
+      # 4️⃣ Upload k6 Artifacts (HTML + dashboard + summary)
       - name: Upload k6 Artifacts
         if: always()
         uses: actions/upload-artifact@v4
