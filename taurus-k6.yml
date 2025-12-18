@@ -4,11 +4,14 @@ settings:
 
 execution:
   - executor: k6
-    script: k6/test.js
+    scenario: k6_test
     vus: 10
     duration: 1m
+
+scenarios:
+  k6_test:
+    script: k6/test.js
 
 reporting:
   - module: console
   - module: final-stats
-
