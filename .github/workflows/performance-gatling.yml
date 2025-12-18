@@ -1,0 +1,57 @@
+name: Performance Tests (Gatling)
+
+on:
+  workflow_dispatch:
+    inputs:
+      simulation:
+        description: 'Gatling simulation class'
+        required: false
+        default: 'simulations.ExampleSimulation'
+
+jobs:
+  gatling:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # 1️⃣ Checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Java 17
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # 3️⃣ Cache Maven
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+
+      # 4️⃣ Run Gatling Simulation
+      - name: Run Gatling Test
+        run: |
+          set -e
+          mvn clean gatling:test \
+            -Dgatling.simulationClass=${{ github.event.inputs.simulation }}
+
+      # 5️⃣ Collect Gatling HTML Report
+      - name: Collect Gatling HTML Report
+        if: always()
+        run: |
+          set +e
+          mkdir -p gatling-html-report
+          cp -r target/gatling/* gatling-html-report/
+
+      # 6️⃣ Upload HTML Report
+      - name: Upload Gatling HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatling-html-report
+          path: gatling-html-report/
+          retention-days: 30
