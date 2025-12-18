@@ -1,14 +1,14 @@
-execution:
-  - executor: shell
-    scenario: k6-test
+settings:
+  artifacts-dir: performance-results
+  check-updates: false
 
-scenarios:
-  k6-test:
-    script:
-      - k6 run k6/test.js --out json=performance-results/k6.json
+execution:
+  - executor: k6
+    script: k6/test.js
+    vus: 10
+    duration: 1m
 
 reporting:
   - module: console
+  - module: final-stats
 
-settings:
-  artifacts-dir: performance-results
