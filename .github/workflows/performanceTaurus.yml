@@ -36,7 +36,6 @@ jobs:
           python-version: '3.10'
 
       # 4️⃣ Instalar JMeter y Plugins Manualmente
-      # Nota: Hacemos esto manual para garantizar que 'jpgc-casutg' esté presente
       - name: Install JMeter & Plugins manually
         run: |
           JMETER_VERSION="5.6.3"
@@ -50,10 +49,15 @@ jobs:
           curl -L https://jmeter-plugins.org/get/ -o $INSTALL_DIR/lib/ext/jmeter-plugins-manager.jar
           curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar -o $INSTALL_DIR/lib/cmdrunner-2.3.jar
           
-          # Instalar Plugins (Custom Thread Groups, etc)
-          java -jar $INSTALL_DIR/lib/cmdrunner-2.3.jar --tool org.jmeterplugins.repository.PluginManagerCMD install jpgc-casutg,jpgc-json,jpgc-cmn
+          # CORRECCIÓN AQUÍ: Quitamos 'jpgc-cmn' de la lista.
+          # Se instalará solo automáticamente al instalar casutg.
+          java -jar $INSTALL_DIR/lib/cmdrunner-2.3.jar --tool org.jmeterplugins.repository.PluginManagerCMD install jpgc-casutg,jpgc-json
           
           echo "JMeter and Plugins installed at $INSTALL_DIR"
+          
+          # Verificación opcional: Listar jars para que veas que cmn sí se bajó
+          echo "Verificando dependencias instaladas:"
+          ls $INSTALL_DIR/lib/ext/ | grep jmeter-plugins-cmn
 
       # 5️⃣ Instalar Taurus (BZT)
       - name: Install Taurus
