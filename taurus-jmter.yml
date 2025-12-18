@@ -4,7 +4,7 @@ execution:
 
 scenarios:
   test-jmx:
-    script: test.jmx
+    script: jmeter/test.jmx
 
 reporting:
   - module: console
