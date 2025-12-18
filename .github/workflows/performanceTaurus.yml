@@ -84,23 +84,20 @@ jobs:
       - name: Run Performance Tests with Taurus
         env:
           TEST_SCENARIO: ${{ github.event.inputs.test_scenario }}
-          TEST_DURATION: ${{ github.event.inputs.duration }}
         run: |
           set -e
           mkdir -p performance-results
 
           echo "Scenario: ${TEST_SCENARIO}"
-          echo "Duration: ${TEST_DURATION} minutes"
 
           bzt ${TEST_SCENARIO} \
             -o modules.jmeter.path=/opt/jmeter \
             -o modules.jmeter.version=5.6.3 \
-            -o modules.jmeter.properties.DURACION=${TEST_DURATION} \
-            -o modules.jmeter.properties.USUARIOS=10 \
             -o settings.artifacts-dir=performance-results \
             -report
 
           echo "✅ Taurus execution completed"
+
 
       # 7️⃣ Generate JMeter HTML Report
       - name: Generate JMeter HTML Report
