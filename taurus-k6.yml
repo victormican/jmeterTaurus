@@ -6,7 +6,7 @@ execution:
 
 scenarios:
   k6_test:
-    script: tests/load/test_k6.js
+    script: tests/test_k6.js
 
 reporting:
   - module: final-stats
