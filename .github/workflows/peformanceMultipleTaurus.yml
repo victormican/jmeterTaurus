@@ -5,7 +5,7 @@ on:
     inputs:
       test_scenario:
         description: 'Taurus scenario file to run'
-        required: false
+        required: true
         default: 'taurus-jmeter.yml'
 
 jobs:
@@ -18,35 +18,52 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Java 17 (JMeter + Gatling)
+      # 2️⃣ Detect Engine
+      - name: Detect Test Engine
+        id: engine
+        run: |
+          SCENARIO="${{ github.event.inputs.test_scenario }}"
+
+          if [[ "$SCENARIO" == *"k6"* ]]; then
+            echo "engine=k6" >> $GITHUB_OUTPUT
+          elif [[ "$SCENARIO" == *"gatling"* ]]; then
+            echo "engine=gatling" >> $GITHUB_OUTPUT
+          else
+            echo "engine=jmeter" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Detected engine: $SCENARIO"
+
+      # 3️⃣ Java (JMeter + Gatling)
       - name: Setup Java
+        if: steps.engine.outputs.engine != 'k6'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # 3️⃣ Node.js (k6 HTML reporter)
+      # 4️⃣ Node.js (k6 only)
       - name: Setup Node.js
+        if: steps.engine.outputs.engine == 'k6'
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # 4️⃣ Install JMeter
+      # 5️⃣ Install JMeter
       - name: Install JMeter
+        if: steps.engine.outputs.engine == 'jmeter'
         run: |
           set -e
           JMETER_VERSION=5.6.3
-          echo "Installing JMeter ${JMETER_VERSION}"
           curl -L https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz | tar -xz
           sudo mv apache-jmeter-${JMETER_VERSION} /opt/jmeter
           echo "/opt/jmeter/bin" >> $GITHUB_PATH
-          /opt/jmeter/bin/jmeter --version
+          jmeter --version
 
-      # 5️⃣ Install JMeter Plugins
+      # 6️⃣ Install JMeter Plugins
       - name: Install JMeter Plugins
+        if: steps.engine.outputs.engine == 'jmeter'
         run: |
-          set -e
-
           curl -L https://jmeter-plugins.org/get/ \
             -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
 
@@ -54,109 +71,57 @@ jobs:
             -o /opt/jmeter/lib/cmdrunner-2.3.jar
 
           cd /opt/jmeter
-
           java -cp lib/ext/jmeter-plugins-manager.jar \
             org.jmeterplugins.repository.PluginManagerCMDInstaller
 
-          java -jar lib/cmdrunner-2.3.jar \
-            --tool org.jmeterplugins.repository.PluginManagerCMD \
-            install jpgc-casutg
-
-      # 6️⃣ Install Taurus (BZT)
+      # 7️⃣ Install Taurus
       - name: Install Taurus
         run: |
-          set -e
           sudo apt-get update
           sudo apt-get install -y python3-pip
           pip3 install --upgrade pip
           pip3 install bzt
 
-      # 7️⃣ Install k6 HTML Reporter
-      - name: Install k6 HTML Reporter
+      # 8️⃣ Run Taurus
+      - name: Run Taurus Scenario
         run: |
-          npm install -g k6-reporter
-
-      # 8️⃣ Run Performance Tests with Taurus
-      - name: Run Performance Tests with Taurus
-        env:
-          TEST_SCENARIO: ${{ github.event.inputs.test_scenario }}
-        run: |
-          set -e
           mkdir -p performance-results
 
-          echo "Running Taurus scenario: ${TEST_SCENARIO}"
-
-          bzt ${TEST_SCENARIO} \
-            -o modules.jmeter.path=/opt/jmeter \
-            -o modules.jmeter.version=5.6.3 \
+          bzt ${{ github.event.inputs.test_scenario }} \
             -o settings.artifacts-dir=performance-results \
             -report
 
-          echo "✅ Taurus execution completed"
-
-      # 9️⃣ Generate JMeter HTML Report
+      # 9️⃣ JMeter HTML Report
       - name: Generate JMeter HTML Report
-        if: always()
+        if: steps.engine.outputs.engine == 'jmeter'
         run: |
-          set +e
           JTL=$(find performance-results -name "*kpi.jtl" -o -name "jmeter.jtl" | head -1)
+          [ -z "$JTL" ] && exit 0
+          jmeter -g "$JTL" -o jmeter-html-report
 
-          if [ -z "$JTL" ]; then
-            echo "No JMeter JTL found"
-            exit 0
-          fi
-
-          mkdir -p jmeter-html-report
-          /opt/jmeter/bin/jmeter -g "$JTL" -o jmeter-html-report
-          echo "✅ JMeter HTML report generated"
-
-      # 🔟 Collect Gatling HTML Report
+      # 🔟 Gatling HTML Report
       - name: Collect Gatling HTML Report
-        if: always()
+        if: steps.engine.outputs.engine == 'gatling'
         run: |
-          set +e
-          if [ -d "gatling/target/gatling" ]; then
-            mkdir -p gatling-html-report
-            cp -r gatling/target/gatling/* gatling-html-report/
-            echo "✅ Gatling HTML report collected"
-          else
-            echo "No Gatling report found"
-          fi
+          mkdir -p gatling-html-report
+          cp -r gatling/target/gatling/* gatling-html-report/
 
-      # 1️⃣1️⃣ Generate k6 HTML Report
-      - name: Generate k6 HTML Report
-        if: always()
+      # 1️⃣1️⃣ k6 HTML + Dashboard
+      - name: Collect k6 HTML Report
+        if: steps.engine.outputs.engine == 'k6'
         run: |
-          set +e
-          if [ -f "performance-results/k6-results.json" ]; then
-            mkdir -p k6-html-report
-            k6-reporter performance-results/k6-results.json \
-              --output k6-html-report/index.html
-            echo "✅ k6 HTML report generated"
-          else
-            echo "No k6 JSON results found"
-          fi
+          mkdir -p k6-html-report
+          cp performance-results/*.html k6-html-report/ || true
 
-      # 1️⃣2️⃣ Upload All Performance Artifacts
+      # 1️⃣2️⃣ Upload Artifacts
       - name: Upload Performance Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: performance-test-reports
+          name: performance-reports
           path: |
             performance-results/
             jmeter-html-report/
             gatling-html-report/
             k6-html-report/
           retention-days: 30
-
-      # 1️⃣3️⃣ Summary
-      - name: Performance Summary
-        if: always()
-        run: |
-          echo "=== PERFORMANCE PIPELINE FINISHED ==="
-          echo "Artifacts available:"
-          echo "- Taurus raw results"
-          echo "- JMeter HTML report"
-          echo "- Gatling HTML report"
-          echo "- k6 HTML report"
