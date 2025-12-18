@@ -3,10 +3,13 @@ import { sleep } from 'k6';
 
 export const options = {
   vus: 5,
-  duration: '10s',
+  duration: '15s',
 };
 
 export default function () {
-  http.get('https://httpbin.org/get');
+  const res = http.get('https://httpbin.org/get');
+  if (res.status !== 200) {
+    throw new Error('Request failed');
+  }
   sleep(1);
 }
