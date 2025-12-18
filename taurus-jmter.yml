@@ -1,16 +1,10 @@
 execution:
   - executor: jmeter
-    scenario: example-test
-    concurrency: 10        
-    ramp-up: 5s
-    hold-for: 1m
+    scenario: test-jmx
 
 scenarios:
-  example-test:
-    requests:
-      - label: Home
-        method: GET
-        url: https://example.com
+  test-jmx:
+    script: test.jmx
 
 reporting:
   - module: console
@@ -23,7 +17,3 @@ modules:
   jmeter:
     path: /opt/jmeter
     version: 5.6.3
-
-    properties:
-      jmeter.save.saveservice.output_format: csv
-      jmeter.save.saveservice.print_field_names: true
