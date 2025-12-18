@@ -1,0 +1,64 @@
+name: Performance Tests (k6)
+
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: 'k6 test script'
+        required: false
+        default: 'k6/test.js'
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # 1️⃣ Checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Install k6
+      - name: Install k6
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y gnupg software-properties-common
+          curl -fsSL https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+          k6 version
+
+      # 3️⃣ Install k6 HTML Reporter
+      - name: Install k6 HTML Reporter
+        run: |
+          npm install -g k6-reporter
+
+      # 4️⃣ Run k6 Test
+      - name: Run k6 Test
+        run: |
+          set -e
+          mkdir -p performance-results
+          k6 run \
+            --out json=performance-results/k6-results.json \
+            ${{ github.event.inputs.script }}
+
+      # 5️⃣ Generate HTML Report
+      - name: Generate k6 HTML Report
+        if: always()
+        run: |
+          set +e
+          mkdir -p k6-html-report
+          k6-reporter performance-results/k6-results.json \
+            --output k6-html-report/index.html
+
+      # 6️⃣ Upload HTML Report
+      - name: Upload k6 HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-html-report
+          path: k6-html-report/
+          retention-days: 30
