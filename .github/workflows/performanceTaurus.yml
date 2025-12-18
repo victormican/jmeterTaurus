@@ -32,48 +32,65 @@ jobs:
       # 3️⃣ Install JMeter
       - name: Install JMeter
         run: |
+          set -e
           JMETER_VERSION=5.6.3
+          echo "Installing JMeter ${JMETER_VERSION}"
           curl -L https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz | tar -xz
           sudo mv apache-jmeter-${JMETER_VERSION} /opt/jmeter
-          echo "/opt/jmeter/bin" >> $GITHUB_PATH
-          jmeter --version
 
-      # 4️⃣ Install JMeter Plugins (correct way)
+          echo "/opt/jmeter/bin" >> $GITHUB_PATH
+
+          /opt/jmeter/bin/jmeter --version
+
+      # 4️⃣ Install JMeter Plugins
       - name: Install JMeter Plugins
         run: |
+          set -e
+
+          # Plugin Manager
           curl -L https://jmeter-plugins.org/get/ \
             -o /opt/jmeter/lib/ext/jmeter-plugins-manager.jar
 
+          # CmdRunner
           curl -L https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar \
             -o /opt/jmeter/lib/cmdrunner-2.3.jar
 
-          jmeter --version
+          # First JMeter run (IMPORTANT)
+          /opt/jmeter/bin/jmeter --version
 
+          # Install Plugins Manager CMD
           cd /opt/jmeter
           java -cp lib/ext/jmeter-plugins-manager.jar \
             org.jmeterplugins.repository.PluginManagerCMDInstaller
 
+          # Install Custom Thread Groups (Ultimate Thread Group)
           java -jar lib/cmdrunner-2.3.jar \
             --tool org.jmeterplugins.repository.PluginManagerCMD \
             install jpgc-casutg
 
+          echo "Installed plugins:"
           ls lib/ext | grep casutg
 
-      # 5️⃣ Install Taurus
+      # 5️⃣ Install Taurus (BZT)
       - name: Install Taurus
         run: |
+          set -e
           sudo apt-get update
           sudo apt-get install -y python3-pip
           pip3 install --upgrade pip
           pip3 install bzt
 
-      # 6️⃣ Run Taurus
+      # 6️⃣ Run Performance Tests with Taurus
       - name: Run Performance Tests with Taurus
         env:
           TEST_SCENARIO: ${{ github.event.inputs.test_scenario }}
           TEST_DURATION: ${{ github.event.inputs.duration }}
         run: |
+          set -e
           mkdir -p performance-results
+
+          echo "Scenario: ${TEST_SCENARIO}"
+          echo "Duration: ${TEST_DURATION} minutes"
 
           bzt ${TEST_SCENARIO} \
             -o modules.jmeter.path=/opt/jmeter \
@@ -83,29 +100,36 @@ jobs:
             -o settings.artifacts-dir=performance-results \
             -report
 
+          echo "✅ Taurus execution completed"
+
       # 7️⃣ Generate JMeter HTML Report
       - name: Generate JMeter HTML Report
         if: always()
         run: |
+          set +e
+          echo "Searching for JTL file..."
           JTL=$(find performance-results -name "*.jtl" | head -1)
 
           if [ -z "$JTL" ]; then
-            echo "❌ No JTL file found"
+            echo "⚠️ No JTL file found, skipping HTML report"
             exit 0
           fi
 
+          echo "Using JTL: $JTL"
           mkdir -p jmeter-html-report
 
-          jmeter -g "$JTL" -o jmeter-html-report
+          /opt/jmeter/bin/jmeter \
+            -g "$JTL" \
+            -o jmeter-html-report
 
-          echo "✅ HTML report generated"
+          echo "✅ JMeter HTML report generated"
 
       # 8️⃣ Upload Taurus Results
       - name: Upload Taurus Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: taurus-results
+          name: taurus-performance-results
           path: performance-results/
           retention-days: 30
 
@@ -118,17 +142,19 @@ jobs:
           path: jmeter-html-report/
           retention-days: 30
 
-      # 🔟 Extract basic metrics
+      # 🔟 Extract Key Metrics (optional)
       - name: Extract Key Metrics
         if: always()
         run: |
-          echo "=== METRICS SUMMARY ==="
+          echo "=== PERFORMANCE METRICS SUMMARY ==="
           JTL=$(find performance-results -name "*.jtl" | head -1)
 
           if [ -n "$JTL" ]; then
-            echo "File: $JTL"
+            echo "Results file: $JTL"
             echo "Total samples:"
             tail -n +2 "$JTL" | wc -l
           else
-            echo "No results file found"
+            echo "No JTL file found"
           fi
+
+          echo "=== WORKFLOW FINISHED ==="
