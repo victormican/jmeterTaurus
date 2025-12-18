@@ -6,7 +6,7 @@ on:
       simulation:
         description: 'Gatling simulation class (FQN)'
         required: true
-        default: 'simulations.LoginSimulation'
+        default: 'simulations.BasicSimulation'
 
 jobs:
   gatling:
