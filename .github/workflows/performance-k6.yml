@@ -31,12 +31,7 @@ jobs:
           sudo apt-get install -y k6
           k6 version
 
-      # 3️⃣ Install k6 HTML Reporter
-      - name: Install k6 HTML Reporter
-        run: |
-          npm install -g k6-reporter
-
-      # 4️⃣ Run k6 Test (with Web Dashboard export)
+      # 3️⃣ Run k6 Test (HTML + Web Dashboard export)
       - name: Run k6 Test
         env:
           K6_WEB_DASHBOARD: "true"
@@ -44,26 +39,13 @@ jobs:
         run: |
           set -e
           mkdir -p performance-results
-          k6 run \
-            --out json=performance-results/k6-results.json \
-            ${{ github.event.inputs.script }}
+          k6 run ${{ github.event.inputs.script }}
 
-      # 5️⃣ Generate HTML Summary Report
-      - name: Generate k6 HTML Report
-        if: always()
-        run: |
-          set +e
-          mkdir -p k6-html-report
-          k6-reporter performance-results/k6-results.json \
-            --output k6-html-report/index.html
-
-      # 6️⃣ Upload k6 Artifacts
+      # 4️⃣ Upload k6 Artifacts
       - name: Upload k6 Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: k6-performance-artifacts
-          path: |
-            performance-results/
-            k6-html-report/
+          path: performance-results/
           retention-days: 30
