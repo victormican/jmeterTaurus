@@ -6,7 +6,7 @@ on:
       test_scenario:
         description: 'Test scenario to run'
         required: false
-        default: 'load-test.yml'
+        default: 'taurus-jmter.yml'
       duration:
         description: 'Test duration (minutes)'
         required: false
