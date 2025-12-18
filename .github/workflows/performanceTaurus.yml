@@ -107,21 +107,26 @@ jobs:
         if: always()
         run: |
           set +e
-          echo "Searching for JTL file..."
-          JTL=$(find performance-results -name "*.jtl" | head -1)
-
+          echo "Searching for valid JTL file..."
+      
+          JTL=$(find performance-results \
+            -name "*kpi.jtl" \
+            -o -name "jmeter.jtl" \
+            | head -1)
+      
           if [ -z "$JTL" ]; then
-            echo "⚠️ No JTL file found, skipping HTML report"
+            echo "❌ No valid JTL found for HTML report"
             exit 0
           fi
-
-          echo "Using JTL: $JTL"
+      
+          echo "✅ Using JTL: $JTL"
+      
           mkdir -p jmeter-html-report
-
+      
           /opt/jmeter/bin/jmeter \
             -g "$JTL" \
             -o jmeter-html-report
-
+      
           echo "✅ JMeter HTML report generated"
 
       # 8️⃣ Upload Taurus Results
