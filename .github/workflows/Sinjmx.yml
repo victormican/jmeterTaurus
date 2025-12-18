@@ -1,0 +1,55 @@
+execution:
+  - concurrency: 10          # Usuarios simultáneos (default, se sobrescribe desde GH Actions)
+    ramp-up: 1m              # Tiempo para llegar a la carga total
+    hold-for: 5m             # Duración de la prueba (default, se sobrescribe desde GH Actions)
+    scenario: mi-flujo-web   # Nombre del escenario a ejecutar
+
+scenarios:
+  mi-flujo-web:
+    # Headers globales para todas las peticiones
+    headers:
+      User-Agent: "Performance-Test-Bot"
+    
+    requests:
+      # Petición 1: Home Page
+      - url: https://blazedemo.com/
+        label: Home_Page
+        method: GET
+        assert:
+          - contains:
+            - "Welcome to the Simple Travel Agency"
+            subject: body
+
+      # Petición 2: Buscar Vuelos (Simulando pausa de usuario)
+      - url: https://blazedemo.com/reserve.php
+        label: Buscar_Vuelos
+        method: POST
+        think-time: 2s       # Simula al usuario pensando 2 segs
+        body:
+          fromPort: "Paris"
+          toPort: "Buenos Aires"
+
+# CRÍTICO: Configuración para que funcione tu CI/CD de "Doble Reporte"
+modules:
+  jmeter:
+    # Esto asegura que el archivo .jtl tenga toda la data necesaria para el Dashboard HTML
+    properties:
+      jmeter.save.saveservice.output_format: csv
+      jmeter.save.saveservice.bytes: true
+      jmeter.save.saveservice.label: true
+      jmeter.save.saveservice.latency: true
+      jmeter.save.saveservice.response_code: true
+      jmeter.save.saveservice.response_message: true
+      jmeter.save.saveservice.successful: true
+      jmeter.save.saveservice.thread_counts: true
+      jmeter.save.saveservice.thread_name: true
+      jmeter.save.saveservice.time: true
+      jmeter.save.saveservice.timestamp_format: ms
+      jmeter.save.saveservice.timestamp_format: yyyy/MM/dd HH:mm:ss.SSS
+
+# Criterios para fallar el pipeline en GitHub Actions
+reporting:
+  - module: passfail
+    criteria:
+      - avg-rt > 500ms, continue as failed  # Si es lento, marca fallo pero termina el test
+      - fail > 1%, stop as failed           # Si hay muchos errores, aborta inmediatamente
