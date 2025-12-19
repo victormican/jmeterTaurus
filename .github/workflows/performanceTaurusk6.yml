@@ -6,7 +6,7 @@ on:
       test_scenario:
         description: 'Archivo de escenario Taurus/K6 a ejecutar'
         required: false
-        default: 'k6-taurus.yml'
+        default: 'taurus-k6.yml'
 
 jobs:
   performance:
@@ -18,12 +18,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Java 17 (necesario para Taurus)
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+      # 2️⃣ Install K6
+      - name: Install K6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg software-properties-common curl
+          curl -s https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+          k6 version
 
       # 3️⃣ Install Python + Taurus
       - name: Install Taurus (BZT)
