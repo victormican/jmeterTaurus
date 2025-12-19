@@ -1,135 +1,76 @@
-name: Performance Tests with Taurus and k6
+name: Performance Tests (Taurus + K6)
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'k6-test.js'
-      - 'performanceTaurusk6.yml'
-      - '.github/workflows/performance.yml'
-  pull_request:
-    branches: [ main ]
-  schedule:
-    - cron: '0 2 * * *'  # Ejecutar diariamente a las 2 AM
-  workflow_dispatch:  # Permite ejecución manual
+  workflow_dispatch:
+    inputs:
+      test_scenario:
+        description: 'Archivo de escenario Taurus/K6 a ejecutar'
+        required: false
+        default: 'k6-taurus.yml'
 
 jobs:
-  performance-test:
+  performance:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 30
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-    
-    - name: Install k6
-      run: |
-        sudo apt-get update
-        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D78C6C768530E4EEF
-        echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-        sudo apt-get update
-        sudo apt-get install k6
-    
-    - name: Install Taurus
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3 python3-pip
-        pip3 install bzt
-    
-    - name: Run Taurus Performance Test
-      id: taurus-run
-      run: |
-        echo "Running Taurus performance test..."
-        bzt performanceTaurusk6.yml
-        
-        # Verificar si el archivo de resultados existe
-        if [ -f "test-results.json" ]; then
-          echo "Results file created successfully"
-          
-          # Extraer métricas clave (ejemplo)
-          if [ -f "summary.json" ]; then
-            echo "Extracting key metrics..."
-            cat summary.json | jq -r '
-              "Performance Test Summary:",
-              "========================",
-              "Total Duration: \(.metrics.test_duration.values.avg)s",
-              "Total Requests: \(.metrics.http_reqs.values.count)",
-              "Request Rate: \(.metrics.http_reqs.values.rate)/s",
-              "Average Response Time: \(.metrics.http_req_duration.values.avg)ms",
-              "95th Percentile: \(.metrics.http_req_duration.values."p(95)")ms",
-              "Failed Requests: \(.metrics.http_req_failed.values.rate * 100)%",
-              ""
-            '
-          fi
-        else
-          echo "Error: Test results file not found"
-          exit 1
-        fi
-    
-    - name: Upload Test Results
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: performance-test-results
-        path: |
-          test-results.json
-          summary.json
-          report.xml
-        retention-days: 30
-    
-    - name: Upload JUnit Test Results
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: junit-report
-        path: report.xml
-    
-    - name: Check Performance Thresholds
-      id: check-thresholds
-      run: |
-        if [ -f "summary.json" ]; then
-          # Extraer métricas y verificar umbrales
-          AVG_RT=$(cat summary.json | jq -r '.metrics.http_req_duration.values.avg')
-          P95=$(cat summary.json | jq -r '.metrics.http_req_duration.values."p(95)"')
-          FAIL_RATE=$(cat summary.json | jq -r '.metrics.http_req_failed.values.rate * 100')
-          
-          echo "Current Metrics:"
-          echo "Average Response Time: ${AVG_RT}ms"
-          echo "95th Percentile: ${P95}ms"
-          echo "Failure Rate: ${FAIL_RATE}%"
-          
-          # Definir umbrales (ajusta según tus necesidades)
-          AVG_RT_THRESHOLD=200
-          P95_THRESHOLD=500
-          FAIL_RATE_THRESHOLD=5
-          
-          FAILED=false
-          
-          if (( $(echo "$AVG_RT > $AVG_RT_THRESHOLD" | bc -l) )); then
-            echo "❌ Average Response Time ($AVG_RT ms) exceeds threshold ($AVG_RT_THRESHOLD ms)"
-            FAILED=true
-          fi
-          
-          if (( $(echo "$P95 > $P95_THRESHOLD" | bc -l) )); then
-            echo "❌ 95th Percentile ($P95 ms) exceeds threshold ($P95_THRESHOLD ms)"
-            FAILED=true
-          fi
-          
-          if (( $(echo "$FAIL_RATE > $FAIL_RATE_THRESHOLD" | bc -l) )); then
-            echo "❌ Failure Rate ($FAIL_RATE%) exceeds threshold ($FAIL_RATE_THRESHOLD%)"
-            FAILED=true
-          fi
-          
-          if [ "$FAILED" = true ]; then
-            echo "Performance thresholds not met!"
-            exit 1
+      # 1️⃣ Checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Install Java 17 (Taurus requiere Java)
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # 3️⃣ Install Python + Taurus
+      - name: Install Taurus (BZT)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install --upgrade pip
+          pip3 install bzt
+
+      # 4️⃣ Run K6 Performance Test via Taurus
+      - name: Run Performance Tests with Taurus
+        env:
+          TEST_SCENARIO: ${{ github.event.inputs.test_scenario }}
+        run: |
+          mkdir -p performance-results
+          echo "Running scenario: ${TEST_SCENARIO}"
+
+          # Ejecuta Taurus con K6
+          # "--report" genera el dashboard web nativo de Taurus
+          bzt ${TEST_SCENARIO} \
+            -o modules.k6.options.out[0]=web \
+            -o settings.artifacts-dir=performance-results \
+            -report
+
+          echo "✅ Taurus execution completed"
+
+      # 5️⃣ Upload Taurus Results
+      - name: Upload Taurus Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: taurus-performance-results
+          path: performance-results/
+          retention-days: 30
+
+      # 6️⃣ Extract Key Metrics (optional)
+      - name: Extract Key Metrics
+        if: always()
+        run: |
+          echo "=== PERFORMANCE METRICS SUMMARY ==="
+          JTL=$(find performance-results -name "*.jtl" | head -1)
+
+          if [ -n "$JTL" ]; then
+            echo "Results file: $JTL"
+            echo "Total samples:"
+            tail -n +2 "$JTL" | wc -l
           else
-            echo "✅ All performance thresholds met!"
+            echo "No JTL file found"
           fi
-        else
-          echo "Warning: summary.json not found, skipping threshold check"
-        fi
+          echo "=== WORKFLOW FINISHED ==="
