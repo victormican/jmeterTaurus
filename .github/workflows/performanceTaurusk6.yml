@@ -1,5 +1,3 @@
-
-# .github/workflows/performance.yml
 name: Performance Tests with Taurus and k6
 
 on:
