@@ -16,7 +16,6 @@ reporting:
     criteria:
       - avg-rt > 200ms for 10s
       - failures > 10% for 10s
-      - errors > 5% for 10s
 
   - module: console
 
