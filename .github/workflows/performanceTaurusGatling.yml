@@ -37,3 +37,4 @@ jobs:
           path: |
             artifacts/
             gatling-results.xml
+            bzt.log
