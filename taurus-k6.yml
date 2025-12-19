@@ -1,3 +1,4 @@
+# Taurus como SOLO ORQUESTADOR - el script K6 controla toda la ejecución
 execution:
   - executor: k6
     scenario:
@@ -5,12 +6,15 @@ execution:
 
 modules:
   k6:
-    cmdline: "--out json=performance-results/test-results.json --summary-export=performance-results/summary.json"
+    cmdline: "--out json=performance-results/test-results.json --summary-export=performance-results/summary.json --console-output"
+    settings:
+      capture-iterations: true
   blazemeter:
     enabled: false
 
 reporting:
   - module: console
+    verbose: true  # Más logs detallados
   
   - module: final-stats
     summary: true
