@@ -25,7 +25,7 @@ jobs:
 
       - name: Run Gatling via Taurus
         run: |
-          bzt taurus.yml \
+          bzt taurus-gatling.yml \
             -o scenarios.gatling-simulation.simulation=${{ github.event.inputs.simulation }} \
             -report
 
