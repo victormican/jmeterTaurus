@@ -47,7 +47,7 @@ jobs:
           echo "Running scenario: ${TEST_SCENARIO}"
 
           # Ejecuta Taurus con K6, generando JSON, summary y dashboard web nativo
-          bzt ${TEST_SCENARIO} \
+          bzt "${TEST_SCENARIO}" \
             -o modules.k6.cmdline="--out json=performance-results/test-results.json --summary-export=performance-results/summary.json --out web" \
             -o settings.artifacts-dir=performance-results \
             -report
@@ -69,9 +69,12 @@ jobs:
         run: |
           echo "=== PERFORMANCE METRICS SUMMARY ==="
           SUMMARY_FILE="performance-results/summary.json"
+
           if [ -f "$SUMMARY_FILE" ]; then
+            echo "Summary file found: $SUMMARY_FILE"
             jq '.' "$SUMMARY_FILE"
           else
             echo "❌ No summary.json found"
           fi
+
           echo "=== WORKFLOW FINISHED ==="
