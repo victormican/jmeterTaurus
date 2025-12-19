@@ -1,4 +1,4 @@
-name: Performance Tests (Gatling via Taurus)
+name: Performance Tests (Gatling con Taurus)
 on:
   workflow_dispatch:
     inputs:
@@ -18,23 +18,49 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          cache: maven
 
-      - name: Install Taurus
+      - name: Instalar Taurus
+        run: python3 -m pip install bzt
+
+      - name: Crear archivo de Taurus en la carpeta gatling
+        working-directory: gatling
         run: |
-          python3 -m pip install bzt
+          cat << EOF > taurus-gatling.yml
+          execution:
+            - executor: gatling
+              scenario: mi-simulacion
 
-      - name: Run Gatling via Taurus
+          scenarios:
+            mi-simulacion:
+              script: target/gatling/gatling.jar
+              simulation: simulations.BasicSimulation   # esto se cambia con el input
+
+          services:
+            - module: shellexec
+              prepare:
+                - mvn clean package -DskipTests
+
+          reporting:
+            - module: console
+            - module: final-stats
+            - module: junit-xml
+              filename: gatling-results.xml
+          EOF
+
+      - name: Correr tu simulación con Taurus
+        working-directory: gatling
         run: |
           bzt taurus-gatling.yml \
-            -o scenarios.gatling-simulation.simulation=${{ github.event.inputs.simulation }} \
+            -o scenarios.mi-simulacion.simulation=${{ github.event.inputs.simulation }} \
             -report
 
-      - name: Upload Taurus/Gatling Report
+      - name: Subir reporte de Gatling (el bonito de Taurus + el HTML original)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gatling-taurus-report
+          name: gatling-report
           path: |
-            artifacts/
-            gatling-results.xml
-            bzt.log
+            gatling/artifacts/
+            gatling/gatling-results.xml
+            gatling/target/gatling/
