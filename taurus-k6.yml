@@ -1,15 +1,15 @@
 execution:
-- executor: k6
-  concurrency: 10  # Número de workers VU de k6
-  hold-for: 1m     # Duración de ejecución (1 minuto)
-  ramp-up: 30s     # Tiempo para alcanzar el concurrency completo
-  iterations: 100  # Número total de iteraciones
-  scenario:
-    script: k6/test.js  # Script de k6
+  - executor: k6
+    concurrency: 10
+    ramp-up: 30s
+    hold-for: 1m
+    iterations: 100
+    scenario:
+      script: k6/test.js
 
 modules:
   k6:
-    cmdline: --out json=test-results.json --summary-export=summary.json
+    cmdline: "--out json=performance-results/test-results.json --summary-export=performance-results/summary.json --out web"
 
 reporting:
   - module: passfail
@@ -18,14 +18,13 @@ reporting:
       - failures > 10% for 10s
       - errors > 5% for 10s
 
+  - module: console
+  - module: final-stats
+    summary: true
+    percentiles: true
+    failed-label: false
+    test-duration: true
 
-- module: console
-- module: final-stats
-  summary: true
-  percentiles: true
-  failed-label: false
-  test-duration: true
-
-- module: junit-xml
-  filename: report.xml
-  data-source: sample
+  - module: junit-xml
+    filename: performance-results/report.xml
+    data-source: sample
