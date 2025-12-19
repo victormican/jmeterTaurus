@@ -1,6 +1,7 @@
 execution:
   - executor: k6
-    concurrency: 10
+    concurrency:
+      global: 10
     ramp-up: 30s
     hold-for: 1m
     iterations: 100
@@ -12,6 +13,8 @@ modules:
     cmdline: "--out json=performance-results/test-results.json --summary-export=performance-results/summary.json --out web"
   blazemeter:
     enabled: false
+    settings:
+      provisioning: manual
 
 reporting:
   - module: passfail
