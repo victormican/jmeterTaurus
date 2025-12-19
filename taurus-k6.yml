@@ -19,6 +19,7 @@ reporting:
       - errors > 5% for 10s
 
   - module: console
+
   - module: final-stats
     summary: true
     percentiles: true
