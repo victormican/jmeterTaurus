@@ -4,17 +4,16 @@ execution:
 
 scenarios:
   gatling-simulation:
-    script: target/gatling/gatling.jar  # Ruta al JAR generado por Maven
-    simulation: simulations.BasicSimulation  # Cambia aquí el FQN de la simulación que quieras ejecutar
+    script: target/gatling/gatling.jar
+    simulation: simulations.BasicSimulation   # Será sobrescrito por el parámetro
 
 services:
-  - module: shell-exec
+  - module: shellexec          # ← Cambio clave: shellexec (no shell-exec)
     prepare:
-      - mvn clean package -DskipTests  # Compila el proyecto y genera el JAR con las simulaciones
+      - mvn clean package -DskipTests
 
 reporting:
   - module: console
   - module: final-stats
-  - module: junit-xml        # Útil para CI
+  - module: junit-xml
     filename: gatling-results.xml
-  - module: blaze-meter      # Opcional, si quieres subir resultados a BlazeMeter
