@@ -23,20 +23,45 @@ jobs:
       - name: Instalar Taurus
         run: python3 -m pip install bzt
 
-      - name: Ejecutar Gatling con Taurus (orquestación completa)
+      - name: Crear taurus-gatling.yml en la carpeta gatling
+        working-directory: gatling
+        run: |
+          cat << 'EOF' > taurus-gatling.yml
+          execution:
+            - executor: gatling
+              scenario: mi-simulacion
+
+          scenarios:
+            mi-simulacion:
+              script: target/gatling-maven-plugin-demo-java.jar   # Ajusta si tiene versión (ej: target/gatling-maven-plugin-demo-java-3.14.9.jar)
+              simulation: simulations.BasicSimulation
+
+          services:
+            - module: shellexec
+              prepare:
+                - mvn clean package -DskipTests
+
+          reporting:
+            - module: console
+            - module: final-stats
+            - module: junit-xml
+              filename: gatling-results.xml
+          EOF
+
+      - name: Ejecutar Gatling con Taurus
         working-directory: gatling
         run: |
           bzt taurus-gatling.yml \
             -o scenarios.mi-simulacion.simulation=${{ github.event.inputs.simulation }} \
             -report
 
-      - name: Subir reportes (Taurus bonito + Gatling original)
+      - name: Subir reportes
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gatling-taurus-reports
           path: |
-            gatling/artifacts/                  # Reporte interactivo de Taurus (abre index.html)
-            gatling/target/gatling/*/           # Reporte HTML clásico de Gatling
+            gatling/artifacts/
+            gatling/target/gatling/
             gatling/gatling-results.xml
             gatling/bzt.log
