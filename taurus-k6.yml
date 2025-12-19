@@ -5,7 +5,7 @@ execution:
   ramp-up: 30s     # Tiempo para alcanzar el concurrency completo
   iterations: 100  # Número total de iteraciones
   scenario:
-    script: k6-test.js  # Script de k6
+    script: k6/test.js  # Script de k6
 
 modules:
   k6:
