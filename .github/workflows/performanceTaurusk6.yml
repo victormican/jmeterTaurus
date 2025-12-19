@@ -18,7 +18,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Install Java 17 (Taurus requiere Java)
+      # 2️⃣ Setup Java 17 (necesario para Taurus)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -32,6 +32,7 @@ jobs:
           sudo apt-get install -y python3-pip
           pip3 install --upgrade pip
           pip3 install bzt
+          echo "✅ Taurus installed"
 
       # 4️⃣ Run K6 Performance Test via Taurus
       - name: Run Performance Tests with Taurus
@@ -41,16 +42,15 @@ jobs:
           mkdir -p performance-results
           echo "Running scenario: ${TEST_SCENARIO}"
 
-          # Ejecuta Taurus con K6
-          # "--report" genera el dashboard web nativo de Taurus
+          # Ejecuta Taurus con K6, generando JSON, summary y dashboard web nativo
           bzt ${TEST_SCENARIO} \
-            -o modules.k6.options.out[0]=web \
+            -o modules.k6.cmdline="--out json=performance-results/test-results.json --summary-export=performance-results/summary.json --out web" \
             -o settings.artifacts-dir=performance-results \
             -report
 
           echo "✅ Taurus execution completed"
 
-      # 5️⃣ Upload Taurus Results
+      # 5️⃣ Upload Taurus Results (JSON, summary, dashboard web)
       - name: Upload Taurus Results
         if: always()
         uses: actions/upload-artifact@v4
@@ -64,13 +64,10 @@ jobs:
         if: always()
         run: |
           echo "=== PERFORMANCE METRICS SUMMARY ==="
-          JTL=$(find performance-results -name "*.jtl" | head -1)
-
-          if [ -n "$JTL" ]; then
-            echo "Results file: $JTL"
-            echo "Total samples:"
-            tail -n +2 "$JTL" | wc -l
+          SUMMARY_FILE="performance-results/summary.json"
+          if [ -f "$SUMMARY_FILE" ]; then
+            jq '.' "$SUMMARY_FILE"
           else
-            echo "No JTL file found"
+            echo "❌ No summary.json found"
           fi
           echo "=== WORKFLOW FINISHED ==="
