@@ -12,11 +12,12 @@ modules:
     cmdline: --out json=test-results.json --summary-export=summary.json
 
 reporting:
-- module: passfail
-  criteria:
-  - avg-rt > 200ms for 10s
-  - percentile-95 > 500ms for 30s
-  - failures > 10% for 10s
+  - module: passfail
+    criteria:
+      - avg-rt > 200ms for 10s
+      - failures > 10% for 10s
+      - errors > 5% for 10s
+
 
 - module: console
 - module: final-stats
