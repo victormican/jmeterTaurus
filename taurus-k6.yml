@@ -10,6 +10,8 @@ execution:
 modules:
   k6:
     cmdline: "--out json=performance-results/test-results.json --summary-export=performance-results/summary.json --out web"
+  blazemeter:
+    enabled: false
 
 reporting:
   - module: passfail
