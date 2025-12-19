@@ -49,8 +49,10 @@ jobs:
           # Ejecuta Taurus con K6, generando JSON, summary y dashboard web nativo
           bzt "${TEST_SCENARIO}" \
             -o modules.k6.cmdline="--out json=performance-results/test-results.json --summary-export=performance-results/summary.json --out web" \
+            -o modules.blazemeter.enabled=false \
             -o settings.artifacts-dir=performance-results \
             -report
+
 
           echo "✅ Taurus execution completed"
 
