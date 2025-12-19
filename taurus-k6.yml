@@ -1,17 +1,30 @@
 execution:
-  - executor: k6
-    scenario: k6_test
-    vus: 10
-    duration: 1m
+- executor: k6
+  concurrency: 10  # Número de workers VU de k6
+  hold-for: 1m     # Duración de ejecución (1 minuto)
+  ramp-up: 30s     # Tiempo para alcanzar el concurrency completo
+  iterations: 100  # Número total de iteraciones
+  scenario:
+    script: k6-test.js  # Script de k6
 
-scenarios:
-  k6_test:
-    script: tests/test_k6.js
+modules:
+  k6:
+    cmdline: --out json=test-results.json --summary-export=summary.json
 
 reporting:
-  - module: final-stats
+- module: passfail
+  criteria:
+  - avg-rt>200ms for 10s, stop as failed
+  - p(95)>500ms for 30s, stop as failed
+  - failures>10% for 10s, stop as failed
 
-passfail:
-  - criteria:
-      - avg-rt < 500ms
-      - fail > 0%
+- module: console
+- module: final-stats
+  summary: true
+  percentiles: true
+  failed-label: false
+  test-duration: true
+
+- module: junit-xml
+  filename: report.xml
+  data-source: sample
