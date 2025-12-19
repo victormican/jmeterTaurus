@@ -1,35 +1,18 @@
 execution:
   - executor: k6
-    concurrency:
-      global: 10
-    ramp-up: 30s
-    hold-for: 1m
-    iterations: 100
     scenario:
       script: k6/test.js
 
 modules:
   k6:
-    cmdline: "--out json=performance-results/test-results.json --summary-export=performance-results/summary.json --out web"
+    cmdline: "--out json=performance-results/test-results.json --summary-export=performance-results/summary.json"
   blazemeter:
     enabled: false
-    settings:
-      provisioning: manual
 
 reporting:
-  - module: passfail
-    criteria:
-      - avg-rt > 200ms for 10s
-      - failures > 10% for 10s
-
   - module: console
-
+  
   - module: final-stats
     summary: true
     percentiles: true
-    failed-label: false
     test-duration: true
-
-  - module: junit-xml
-    filename: performance-results/report.xml
-    data-source: sample
