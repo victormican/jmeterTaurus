@@ -14,9 +14,9 @@ modules:
 reporting:
 - module: passfail
   criteria:
-  - avg-rt>200ms for 10s, stop as failed
-  - p(95)>500ms for 30s, stop as failed
-  - failures>10% for 10s, stop as failed
+  - avg-rt > 200ms for 10s
+  - percentile-95 > 500ms for 30s
+  - failures > 10% for 10s
 
 - module: console
 - module: final-stats
