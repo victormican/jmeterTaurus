@@ -1,21 +1,22 @@
-# Taurus como SOLO ORQUESTADOR - el script K6 controla toda la ejecución
+# Configuración Taurus+K6 según documentación oficial de BlazeMeter
 execution:
   - executor: k6
-    scenario:
-      script: k6/test.js
+    concurrency: 5    # Usuarios concurrentes
+    hold-for: 30s     # Duración del test
+    scenario: k6-test
+
+scenarios:
+  k6-test: 
+    script: k6/test3.js
 
 modules:
   k6:
-    cmdline: "--out json=performance-results/test-results.json --summary-export=performance-results/summary.json --console-output"
-    settings:
-      capture-iterations: true
+    cmdline: "--out json=performance-results/test-results.json --summary-export=performance-results/summary.json"
   blazemeter:
     enabled: false
 
 reporting:
   - module: console
-    verbose: true  # Más logs detallados
-  
   - module: final-stats
     summary: true
     percentiles: true
