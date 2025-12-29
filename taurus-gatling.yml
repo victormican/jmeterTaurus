@@ -4,9 +4,16 @@ execution:
 
 scenarios:
   mi-simulacion:
-    script: gatling
+    script: gatling/target/gatling-maven-plugin-demo-java-3.14.9.jar
     simulation: simulations.BasicSimulation
+
+services:
+  - module: shellexec
+    prepare:
+      - cd gatling && mvn clean package -DskipTests
 
 reporting:
   - module: console
   - module: final-stats
+  - module: junit-xml
+    filename: gatling-results.xml
