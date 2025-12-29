@@ -25,47 +25,12 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install bzt
 
-      - name: Build Gatling fat JAR
-        run: |
-          cd gatling
-          mvn clean package -DskipTests
-
-      - name: Locate shaded Gatling JAR
-        run: |
-          cd gatling
-          ls -lh target/
-          JAR=$(ls target/*-shaded.jar)
-          echo "GATLING_JAR=$JAR" >> $GITHUB_ENV
-
-      - name: Verify simulation inside shaded JAR
-        run: |
-          cd gatling
-          jar tf "$GATLING_JAR" | grep simulations/BasicSimulation.class
-
-      - name: Generate Taurus config
-        run: |
-          cd gatling
-          cat <<EOF > taurus-gatling.yml
-          execution:
-            - executor: gatling
-              scenario: mi-simulacion
-
-          scenarios:
-            mi-simulacion:
-              script: $GATLING_JAR
-              simulation: ${{ github.event.inputs.simulation }}
-
-          reporting:
-            - module: console
-            - module: final-stats
-            - module: junit-xml
-              filename: gatling-results.xml
-          EOF
-
       - name: Run Gatling with Taurus
         run: |
           cd gatling
-          bzt taurus-gatling.yml
+          bzt taurus-gatling.yml \
+            -o scenarios.mi-simulacion.simulation=${{ github.event.inputs.simulation }}
+
 
       - name: Upload reports
         if: always()
