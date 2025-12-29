@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       simulation:
-        description: Gatling simulation FQN
+        description: 'Gatling simulation class (FQN)'
         required: true
-        default: simulations.BasicSimulation
+        default: 'simulations.BasicSimulation'
 
 jobs:
   gatling:
@@ -21,16 +21,12 @@ jobs:
           java-version: 17
 
       - name: Install Taurus
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install bzt
+        run: python3 -m pip install bzt
 
       - name: Run Gatling with Taurus
         run: |
           bzt taurus-gatling.yml \
             -o scenarios.mi-simulacion.simulation=${{ github.event.inputs.simulation }}
-
-
 
       - name: Upload reports
         if: always()
@@ -38,6 +34,6 @@ jobs:
         with:
           name: gatling-taurus-reports
           path: |
-            gatling/artifacts/
             gatling/target/gatling/
-            gatling/gatling-results.xml
+            gatling-results.xml
+            20*/
