@@ -1,6 +1,6 @@
 settings:
   gatling:
-    version: 3.14.9
+    version: 3.13.5
 
 execution:
   - executor: gatling
@@ -9,7 +9,7 @@ execution:
 scenarios:
   default:
     script: gatling/target/gatling-maven-plugin-demo-java-3.14.9.jar
-    simulation: ${SIMULATION}
+    simulation: simulations.BasicSimulation
 
 services:
   - module: shellexec
