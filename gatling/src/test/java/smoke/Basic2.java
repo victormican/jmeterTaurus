@@ -24,9 +24,9 @@ public class Basic2 extends Simulation {
         setUp(
             scn.injectOpen(
                 rampUsers(
-                    Integer.getInteger("USUARIOS", 10)
+                    Integer.getInteger("USUARIOS", 5)
                 ).during(
-                    Integer.getInteger("RAMP_UP", 30)
+                    Integer.getInteger("RAMP_UP", 10)
                 )
             )
         ).protocols(httpProtocol);
