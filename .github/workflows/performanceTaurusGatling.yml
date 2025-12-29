@@ -4,55 +4,75 @@ on:
   workflow_dispatch:
     inputs:
       simulation:
-        description: 'Gatling simulation class (FQN)'
+        description: Gatling simulation FQN
         required: true
-        default: 'simulations.BasicSimulation'
+        default: simulations.BasicSimulation
 
 jobs:
-  gatling-taurus:
+  gatling:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-          cache: maven
 
       - name: Install Taurus
         run: |
-          python3 -m pip install bzt
+          python3 -m pip install --upgrade pip
+          pip install bzt
 
       - name: Build Gatling fat JAR
         run: |
           cd gatling
           mvn clean package -DskipTests
 
+      - name: Locate shaded Gatling JAR
+        run: |
+          cd gatling
+          ls -lh target/
+          JAR=$(ls target/*-shaded.jar)
+          echo "GATLING_JAR=$JAR" >> $GITHUB_ENV
+
       - name: Verify simulation inside shaded JAR
         run: |
           cd gatling
-          JAR=$(ls target/*-shaded.jar)
-          echo "Using JAR: $JAR"
-          jar tf "$JAR" | grep simulations/BasicSimulation.class
+          jar tf "$GATLING_JAR" | grep simulations/BasicSimulation.class
 
-
-
-
-      - name: Run Taurus
+      - name: Generate Taurus config
         run: |
           cd gatling
-          bzt taurus-gatling.yml \
-            -o scenarios.mi-simulacion.simulation=${{ github.event.inputs.simulation }}
+          cat <<EOF > taurus-gatling.yml
+          execution:
+            - executor: gatling
+              scenario: mi-simulacion
 
-      - name: Upload Taurus Artifacts
+          scenarios:
+            mi-simulacion:
+              script: $GATLING_JAR
+              simulation: ${{ github.event.inputs.simulation }}
+
+          reporting:
+            - module: console
+            - module: final-stats
+            - module: junit-xml
+              filename: gatling-results.xml
+          EOF
+
+      - name: Run Gatling with Taurus
+        run: |
+          cd gatling
+          bzt taurus-gatling.yml
+
+      - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gatling-taurus-report
+          name: gatling-taurus-reports
           path: |
+            gatling/artifacts/
             gatling/target/gatling/
-            gatling/*/gatling-results.xml
-            gatling/bzt.log
+            gatling/gatling-results.xml
