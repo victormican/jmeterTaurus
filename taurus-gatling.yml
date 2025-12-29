@@ -8,7 +8,7 @@ execution:
 
 scenarios:
   default:
-    script: gatling/target/gatling-maven-plugin-demo-java-3.14.9.jar
+    script: gatling/target/gatling-maven-plugin-demo-java-3.13.5.jar
     simulation: simulations.BasicSimulation
 
 services:
