@@ -31,10 +31,13 @@ jobs:
           cd gatling
           mvn clean package -DskipTests
 
-      - name: Verify simulation inside JAR
+      - name: Verify simulation inside shaded JAR
         run: |
           cd gatling
-          jar tf target/*-shaded.jar | grep simulations/BasicSimulation.class
+          JAR=$(ls target/*-shaded.jar)
+          echo "Using JAR: $JAR"
+          jar tf "$JAR" | grep simulations/BasicSimulation.class
+
 
 
       - name: Run Taurus
