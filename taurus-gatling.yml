@@ -4,7 +4,7 @@ execution:
 
 scenarios:
   mi-simulacion:
-    script: target/gatling-tests.jar
+    script: target/gatling-maven-plugin-demo-java-3.14.9-shaded.jar
     simulation: simulations.BasicSimulation
 
 modules:
