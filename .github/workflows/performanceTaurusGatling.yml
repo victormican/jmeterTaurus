@@ -24,9 +24,11 @@ jobs:
         run: python3 -m pip install bzt
 
       - name: Run Gatling with Taurus
+        env:
+          SIMULATION: ${{ github.event.inputs.simulation }}
         run: |
-          bzt taurus-gatling.yml \
-            -o scenarios.default.simulation=${{ github.event.inputs.simulation }}
+          bzt taurus-gatling.yml
+
 
       - name: Upload reports
         if: always()
