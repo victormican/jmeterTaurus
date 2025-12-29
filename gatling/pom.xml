@@ -10,7 +10,7 @@
 
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
-    <gatling.version>3.9.5</gatling.version>
+    <gatling.version>3.13.5</gatling.version>
     <gatling-maven-plugin.version>4.20.14</gatling-maven-plugin.version>
   </properties>
 
