@@ -4,7 +4,7 @@ execution:
 
 scenarios:
   mi-simulacion:
-    script: .
+    script: gatling
     simulation: simulations.BasicSimulation
 
 reporting:
