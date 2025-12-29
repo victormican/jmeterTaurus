@@ -34,7 +34,8 @@ jobs:
       - name: Verify simulation inside JAR
         run: |
           cd gatling
-          jar tf target/gatling-tests.jar | grep simulations/BasicSimulation.class
+          jar tf target/*-shaded.jar | grep simulations/BasicSimulation.class
+
 
       - name: Run Taurus
         run: |
