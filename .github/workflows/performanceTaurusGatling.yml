@@ -1,4 +1,4 @@
-name: Performance Tests (Gatling con Taurus)
+name: Performance Tests (Gatling + Taurus)
 
 on:
   workflow_dispatch:
@@ -9,70 +9,45 @@ on:
         default: 'simulations.BasicSimulation'
 
 jobs:
-  gatling:
+  gatling-taurus:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
           cache: maven
 
-      - name: Instalar Taurus
-        run: python3 -m pip install bzt
-
-      # 1️⃣ Compilamos el FAT JAR con las simulations
-      - name: Compilar proyecto Gatling (fat jar)
-        working-directory: gatling
-        run: mvn clean package -DskipTests
-
-      # 2️⃣ Verificación defensiva (opcional pero recomendable)
-      - name: Verificar que la Simulation existe en el jar
-        working-directory: gatling
+      - name: Install Taurus
         run: |
-          jar tf target/gatling-tests.jar | grep "${{ github.event.inputs.simulation }}" || exit 1
+          python3 -m pip install bzt
 
-      # 3️⃣ Crear config Taurus
-      - name: Crear taurus-gatling.yml
-        working-directory: gatling
+      - name: Build Gatling fat JAR
         run: |
-          cat << 'EOF' > taurus-gatling.yml
-          execution:
-            - executor: gatling
-              scenario: load-test
+          cd gatling
+          mvn clean package -DskipTests
 
-          scenarios:
-            load-test:
-              script: target/gatling-tests.jar
-              simulation: simulations.BasicSimulation
-
-          reporting:
-            - module: console
-            - module: final-stats
-            - module: junit-xml
-              filename: gatling-results.xml
-          EOF
-
-      # 4️⃣ Ejecutar Taurus (inyectando la simulation elegida)
-      - name: Ejecutar Gatling con Taurus
-        working-directory: gatling
+      - name: Verify simulation inside JAR
         run: |
+          cd gatling
+          jar tf target/gatling-tests.jar | grep simulations/BasicSimulation.class
+
+      - name: Run Taurus
+        run: |
+          cd gatling
           bzt taurus-gatling.yml \
-            -o scenarios.load-test.simulation=${{ github.event.inputs.simulation }}
+            -o scenarios.mi-simulacion.simulation=${{ github.event.inputs.simulation }}
 
-      # 5️⃣ Subir reportes
-      - name: Subir reportes
+      - name: Upload Taurus Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gatling-taurus-reports
+          name: gatling-taurus-report
           path: |
-            gatling/artifacts/
             gatling/target/gatling/
-            gatling/gatling-results.xml
+            gatling/*/gatling-results.xml
             gatling/bzt.log
