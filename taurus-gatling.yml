@@ -4,17 +4,15 @@ execution:
 
 scenarios:
   mi-simulacion:
-    script: target/gatling-maven-plugin-demo-java.jar   # ← JAR generado por Maven (ajusta si tu versión es diferente, ej. gatling-maven-plugin-demo-java-1.0-SNAPSHOT.jar)
-    simulation: simulations.BasicSimulation             # Sobrescrito por el input del workflow
+    script: target/gatling-tests.jar
+    simulation: simulations.BasicSimulation
 
-services:
-  - module: shellexec
-    prepare:
-      - mvn clean package -DskipTests   # Compila y genera el JAR correcto
+modules:
+  gatling:
+    version: 3.14.9
 
 reporting:
   - module: console
   - module: final-stats
   - module: junit-xml
     filename: gatling-results.xml
-  - module: blazemeter   # Opcional: sube a BlazeMeter para reporte online bonito
