@@ -48,6 +48,22 @@
           <!-- Enterprise Cloud (https://cloud.gatling.io/) configuration reference: https://docs.gatling.io/reference/integrations/build-tools/maven-plugin/#running-your-simulations-on-gatling-enterprise-cloud -->
         </configuration>
       </plugin>
+      <plugin>
+           <groupId>org.apache.maven.plugins</groupId>
+           <artifactId>maven-shade-plugin</artifactId>
+           <version>3.5.1</version>
+           <executions>
+             <execution>
+               <phase>package</phase>
+               <goals>
+                 <goal>shade</goal>
+               </goals>
+               <configuration>
+                 <finalName>gatling-tests</finalName>
+               </configuration>
+             </execution>
+           </executions>
+     </plugin>            
     </plugins>
   </build>
 </project>
