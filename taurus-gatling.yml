@@ -4,15 +4,9 @@ execution:
 
 scenarios:
   mi-simulacion:
-    script: target/gatling-maven-plugin-demo-java-3.14.9-shaded.jar
+    script: .
     simulation: simulations.BasicSimulation
-
-modules:
-  gatling:
-    version: 3.14.9
 
 reporting:
   - module: console
   - module: final-stats
-  - module: junit-xml
-    filename: gatling-results.xml
