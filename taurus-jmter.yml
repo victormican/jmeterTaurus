@@ -1,21 +1,19 @@
-settings:
-  gatling:
-    version: 3.13.5   # la que quieras usar
-
 execution:
-  - executor: gatling
-    scenario: default
+  - executor: jmeter
+    scenario: test-jmx
 
 scenarios:
-  default:
-    script: gatling/target/gatling-maven-plugin-demo-java-3.14.9.jar
-    simulation: ${SIMULATION}
-
-services:
-  - module: shellexec
-    prepare:
-      - cd gatling && mvn clean package -DskipTests
+  test-jmx:
+    script: jmeter/test.jmx
 
 reporting:
   - module: console
-  - module: final-stats
+
+settings:
+  artifacts-dir: performance-results
+  check-updates: false
+
+modules:
+  jmeter:
+    path: /opt/jmeter
+    version: 5.6.3
