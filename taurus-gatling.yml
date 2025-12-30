@@ -6,7 +6,8 @@ scenarios:
   run-gatling:
     script: |
       cd gatling
-      mvn gatling:test -Dgatling.simulationClass=simulations.BasicSimulation
+      mvn gatling:test -Dgatling.simulationClass=${SIMULATION}
+
 
 reporting:
   - module: console
