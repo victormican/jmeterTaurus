@@ -1,10 +1,18 @@
 execution:
   - executor: gatling
     scenario: mi-simulacion
+    gatling:
+      version: 3.13.5
 
 scenarios:
   mi-simulacion:
     script: gatling/target/gatling-maven-plugin-demo-java-3.13.5-tests.jar
+    simulation: simulations.BasicSimulation
+
+services:
+  - module: shellexec
+    prepare:
+      - cd gatling && mvn -B -U clean package -DskipTests
 
 reporting:
   - module: console
