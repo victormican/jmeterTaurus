@@ -11,14 +11,14 @@ import static io.gatling.javaapi.http.HttpDsl.*;
 public class BasicSimulation extends Simulation {
 
     HttpProtocolBuilder httpProtocol =
-        http.baseUrl("https://example.com")
+        http.baseUrl("https://jsonplaceholder.typicode.com")
             .acceptHeader("application/json");
 
     ScenarioBuilder scn =
         scenario("Basic Load Test")
             .exec(
-                http("GET Home")
-                    .get("/")
+                http("GET Post 1")
+                    .get("/posts/1")
                     .check(status().is(200))
             );
 
