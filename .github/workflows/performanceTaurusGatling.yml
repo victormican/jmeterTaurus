@@ -34,7 +34,7 @@ jobs:
         env:
           SIMULATION: ${{ github.event.inputs.simulation }}
         run: |
-          bzt taurus/taurus-gatling.yml
+          bzt ./taurus-gatling.yml
 
       - name: Upload reports
         if: always()
