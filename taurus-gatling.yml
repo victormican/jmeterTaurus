@@ -1,19 +1,15 @@
 settings:
   artifacts-dir: artifacts
 
-modules:
-  gatling:
-    version: 3.13.5
-    path: gatling
-
 execution:
-  - executor: gatling
-    scenario: gatling-test
+  - executor: shellexec
+    scenario: gatling-cli
 
 scenarios:
-  gatling-test:
-    script: gatling
-    simulation: ${SIMULATION}
+  gatling-cli:
+    script:
+      - cd gatling
+      - mvn gatling:test -Dgatling.simulationClass=${SIMULATION}
 
 reporting:
   - module: console
