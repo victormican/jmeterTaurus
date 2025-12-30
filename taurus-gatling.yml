@@ -5,7 +5,10 @@ execution:
 scenarios:
   mi-simulacion:
     script: gatling/target/gatling-maven-plugin-demo-java-3.13.5-tests.jar
-    simulation: ${__env(SIMULATION)}
+     gatling:
+        version: 3.13.5
+        maven:
+          command: mvn gatling:test -Dgatling.simulationClass=${SIMULATION}   
 
 
 services:
