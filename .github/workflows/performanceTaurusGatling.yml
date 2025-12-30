@@ -21,14 +21,20 @@ jobs:
           java-version: 17
 
       - name: Install Taurus
-        run: python3 -m pip install bzt
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install bzt
+
+      - name: Build Gatling project
+        run: |
+          cd gatling
+          mvn clean package -DskipTests
 
       - name: Run Gatling with Taurus
         env:
           SIMULATION: ${{ github.event.inputs.simulation }}
         run: |
-          bzt taurus-gatling.yml
-
+          bzt taurus/taurus-gatling.yml
 
       - name: Upload reports
         if: always()
@@ -37,5 +43,4 @@ jobs:
           name: gatling-taurus-reports
           path: |
             gatling/target/gatling/
-            gatling-results.xml
-            20*/
+            artifacts/
