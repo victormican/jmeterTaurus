@@ -8,7 +8,7 @@ execution:
 
 scenarios:
   mi-simulacion:
-    script: gatling/target/gatling-maven-plugin-demo-java-3.13.5-tests.jar
+    script: gatling/target/gatling-taurus.jar
     simulation: simulations.BasicSimulation
 
 services:
