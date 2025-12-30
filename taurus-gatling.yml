@@ -5,17 +5,15 @@ execution:
 scenarios:
   mi-simulacion:
     script: gatling/target/gatling-maven-plugin-demo-java-3.13.5-tests.jar
-     gatling:
-        version: 3.13.5
-        maven:
-          command: mvn gatling:test -Dgatling.simulationClass=${SIMULATION}   
-
+    gatling:
+      version: 3.13.5
+      maven:
+        command: mvn gatling:test -Dgatling.simulationClass=${SIMULATION}
 
 services:
   - module: shellexec
     prepare:
       - cd gatling && mvn clean package -DskipTests
-
 
 reporting:
   - module: console
