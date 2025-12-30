@@ -42,24 +42,47 @@
         <version>${gatling-maven-plugin.version}</version>
       </plugin>
 
+         <plugin>
+           <groupId>org.apache.maven.plugins</groupId>
+           <artifactId>maven-jar-plugin</artifactId>
+           <version>3.4.1</version>
+           <executions>
+             <execution>
+               <goals>
+                 <goal>test-jar</goal>
+               </goals>
+             </execution>
+           </executions>
+         </plugin>
+
+
       <!-- ✅ FAT JAR para Taurus -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.5.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <finalName>gatling-taurus</finalName>
-              <createDependencyReducedPom>false</createDependencyReducedPom>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+         <plugin>
+           <groupId>org.apache.maven.plugins</groupId>
+           <artifactId>maven-shade-plugin</artifactId>
+           <version>3.5.0</version>
+           <executions>
+             <execution>
+               <phase>package</phase>
+               <goals>
+                 <goal>shade</goal>
+               </goals>
+               <configuration>
+                 <finalName>gatling-taurus</finalName>
+                 <shadedArtifactAttached>false</shadedArtifactAttached>
+                 <filters>
+                   <filter>
+                     <artifact>*:*</artifact>
+                     <includes>
+                       <include>**</include>
+                     </includes>
+                   </filter>
+                 </filters>
+               </configuration>
+             </execution>
+           </executions>
+         </plugin>
+
 
     </plugins>
   </build>
