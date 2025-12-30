@@ -6,10 +6,7 @@ modules:
     version: 3.13.5
 
 execution:
-  - executor: gatling
-    concurrency: 10
-    ramp-up: 30s
-    hold-for: 2m
+  - executor: gatling-maven
     scenario: gatling-test
 
 scenarios:
