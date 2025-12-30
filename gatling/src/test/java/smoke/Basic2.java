@@ -6,7 +6,7 @@ import io.gatling.javaapi.http.*;
 import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.*;
 
-public class Basic2 extends Simulation {
+public class BasicSimulation extends Simulation {
 
     HttpProtocolBuilder httpProtocol =
         http.baseUrl("https://example.com")
@@ -24,7 +24,7 @@ public class Basic2 extends Simulation {
         setUp(
             scn.injectOpen(
                 rampUsers(
-                    Integer.getInteger("USUARIOS", 5)
+                    Integer.getInteger("USUARIOS", 10)
                 ).during(
                     Integer.getInteger("RAMP_UP", 10)
                 )
