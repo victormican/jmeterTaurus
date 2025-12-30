@@ -1,13 +1,11 @@
 execution:
-  - executor: shellexec
-    scenario: run-gatling
+  - executor: gatling
+    scenario: mi-simulacion
 
 scenarios:
-  run-gatling:
-    script: |
-      cd gatling
-      mvn gatling:test -Dgatling.simulationClass=${SIMULATION}
-
+  mi-simulacion:
+    script: target/gatling-taurus.jar
+    simulation: ${SIMULATION}
 
 reporting:
   - module: console
