@@ -1,17 +1,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.gatling.demo</groupId>
   <artifactId>gatling-maven-plugin-demo-java</artifactId>
-  <version>3.13.5</version>
+  <version>3.14.9</version>
 
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
-    <gatling.version>3.13.5</gatling.version>
+    <gatling.version>3.9.5</gatling.version>
     <gatling-maven-plugin.version>4.20.14</gatling-maven-plugin.version>
   </properties>
 
@@ -41,6 +40,18 @@
         <groupId>io.gatling</groupId>
         <artifactId>gatling-maven-plugin</artifactId>
         <version>${gatling-maven-plugin.version}</version>
+      </plugin>
+
+      <!-- 🔥 ESTO ES LA CLAVE -->
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>
