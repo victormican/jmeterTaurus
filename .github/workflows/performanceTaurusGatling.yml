@@ -30,8 +30,12 @@ jobs:
           cd gatling
           mvn clean package -DskipTests
 
-      - name: Check jar
-        run: ls -lh gatling/target
+      -  name: Check jar contents (debug)
+         run: |
+            echo "=== target content ==="
+            ls -lh gatling/target
+            echo "=== checking simulation ==="
+            jar tf gatling/target/gatling-taurus.jar | grep simulations/BasicSimulation
 
 
       - name: Run Gatling with Taurus
