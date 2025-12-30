@@ -31,10 +31,11 @@ jobs:
           mvn clean package -DskipTests
 
       - name: Run Gatling with Taurus
+        run: |
+          bzt taurus-gatling.yml
         env:
           SIMULATION: ${{ github.event.inputs.simulation }}
-        run: |
-          bzt ./taurus-gatling.yml
+
 
       - name: Upload reports
         if: always()
