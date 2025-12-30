@@ -6,7 +6,7 @@ import io.gatling.javaapi.http.*;
 import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.*;
 
-public class BasicSimulation extends Simulation {
+public class Basic2 extends Simulation {
 
     HttpProtocolBuilder httpProtocol =
         http.baseUrl("https://example.com")
