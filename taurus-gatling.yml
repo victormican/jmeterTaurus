@@ -1,20 +1,21 @@
 settings:
+  artifacts-dir: artifacts
+
+modules:
   gatling:
     version: 3.13.5
 
 execution:
   - executor: gatling
-    scenario: default
+    concurrency: 10
+    ramp-up: 30s
+    hold-for: 2m
+    scenario: gatling-test
 
 scenarios:
-  default:
-    script: gatling/target/gatling-maven-plugin-demo-java-3.13.5.jar
-    simulation: simulations.BasicSimulation
-
-services:
-  - module: shellexec
-    prepare:
-      - cd gatling && mvn clean package -DskipTests
+  gatling-test:
+    script: gatling
+    simulation: ${SIMULATION}
 
 reporting:
   - module: console
