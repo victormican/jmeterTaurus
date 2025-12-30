@@ -1,8 +1,10 @@
+settings:
+  gatling:
+    version: 3.13.5
+
 execution:
   - executor: gatling
     scenario: mi-simulacion
-    gatling:
-      version: 3.13.5
 
 scenarios:
   mi-simulacion:
