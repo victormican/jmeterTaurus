@@ -7,19 +7,20 @@
   <groupId>io.gatling.demo</groupId>
   <artifactId>gatling-maven-plugin-demo-java</artifactId>
   <version>3.14.9</version>
-  
+
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
-    <gatling.version>${project.version}</gatling.version>
+    <gatling.version>3.14.9</gatling.version>
     <gatling-maven-plugin.version>4.20.14</gatling-maven-plugin.version>
   </properties>
 
   <dependencies>
+    <!-- Gatling Java DSL -->
     <dependency>
       <groupId>io.gatling.highcharts</groupId>
       <artifactId>gatling-charts-highcharts</artifactId>
       <version>${gatling.version}</version>
-      <scope>test</scope>
+      <scope>compile</scope> <!-- IMPORTANTE: compile para que el fat JAR lo incluya -->
     </dependency>
   </dependencies>
 
@@ -35,57 +36,66 @@
         </configuration>
       </plugin>
 
-      <!-- Gatling (para mvn gatling:test si lo necesitas) -->
+      <!-- Gatling plugin -->
       <plugin>
         <groupId>io.gatling</groupId>
         <artifactId>gatling-maven-plugin</artifactId>
         <version>${gatling-maven-plugin.version}</version>
       </plugin>
 
-         <plugin>
-           <groupId>org.apache.maven.plugins</groupId>
-           <artifactId>maven-jar-plugin</artifactId>
-           <version>3.4.1</version>
-           <executions>
-             <execution>
-               <goals>
-                 <goal>test-jar</goal>
-               </goals>
-             </execution>
-           </executions>
-         </plugin>
+      <!-- Generar test-jar con tus simulaciones -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
+      <!-- FAT JAR ejecutable -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>shade-gatling-tests</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>${project.groupId}:${project.artifactId}:jar:tests</include>
+                  <include>*:*</include>
+                </includes>
+              </artifactSet>
 
-      <!-- ✅ FAT JAR para Taurus -->
-         <plugin>
-           <groupId>org.apache.maven.plugins</groupId>
-           <artifactId>maven-shade-plugin</artifactId>
-           <version>3.5.0</version>
-           <executions>
-             <execution>
-               <id>shade-gatling-tests</id>
-               <phase>package</phase>
-               <goals>
-                 <goal>shade</goal>
-               </goals>
-               <configuration>
-         
-                 <!-- 🚨 USAR EL TEST-JAR -->
-                 <artifactSet>
-                   <includes>
-                     <include>${project.groupId}:${project.artifactId}:jar:tests</include>
-                     <include>*:*</include>
-                   </includes>
-                 </artifactSet>
-         
-                 <finalName>gatling-taurus</finalName>
-                 <shadedArtifactAttached>false</shadedArtifactAttached>
-         
-               </configuration>
-             </execution>
-           </executions>
-         </plugin>
+              <finalName>gatling-taurus</finalName>
+              <shadedArtifactAttached>false</shadedArtifactAttached>
 
+              <!-- 👇 Excluir firmas que rompen el JAR -->
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
 
     </plugins>
