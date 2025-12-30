@@ -1,15 +1,16 @@
-settings:
-  artifacts-dir: artifacts
-
 execution:
-  - executor: shellexec
-    scenario: gatling-cli
+  - executor: gatling
+    scenario: mi-simulacion
 
 scenarios:
-  gatling-cli:
-    script:
-      - cd gatling
-      - mvn gatling:test -Dgatling.simulationClass=${SIMULATION}
+  mi-simulacion:
+    script: gatling/target/gatling-maven-plugin-demo-java-3.13.5-tests.jar
+
+services:
+  - module: shellexec
+    prepare:
+      - cd gatling && mvn clean package -DskipTests
+
 
 reporting:
   - module: console
