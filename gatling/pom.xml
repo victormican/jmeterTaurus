@@ -63,25 +63,29 @@
            <version>3.5.0</version>
            <executions>
              <execution>
+               <id>shade-gatling-tests</id>
                <phase>package</phase>
                <goals>
                  <goal>shade</goal>
                </goals>
                <configuration>
+         
+                 <!-- 🚨 USAR EL TEST-JAR -->
+                 <artifactSet>
+                   <includes>
+                     <include>${project.groupId}:${project.artifactId}:jar:tests</include>
+                     <include>*:*</include>
+                   </includes>
+                 </artifactSet>
+         
                  <finalName>gatling-taurus</finalName>
                  <shadedArtifactAttached>false</shadedArtifactAttached>
-                 <filters>
-                   <filter>
-                     <artifact>*:*</artifact>
-                     <includes>
-                       <include>**</include>
-                     </includes>
-                   </filter>
-                 </filters>
+         
                </configuration>
              </execution>
            </executions>
          </plugin>
+
 
 
     </plugins>
