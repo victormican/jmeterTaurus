@@ -4,6 +4,7 @@ settings:
 modules:
   gatling:
     version: 3.13.5
+    path: gatling
 
 execution:
   - executor: gatling-maven
