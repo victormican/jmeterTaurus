@@ -5,7 +5,8 @@ execution:
 scenarios:
   mi-simulacion:
     script: gatling/target/gatling-maven-plugin-demo-java-3.13.5-tests.jar
-    simulation: ${SIMULATION}
+    simulation: ${__env(SIMULATION)}
+
 
 services:
   - module: shellexec
